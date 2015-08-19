@@ -20,12 +20,14 @@
  ##############################################################
  */
 opt = require('node-getopt').create([
-    ['p' , 'port=PORT'           , 'http server port; default=8080', 8080],
-    ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info', 'info'],
+    ['p' , 'port=PORT'           , 'http server port; default=8080'],
+    ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
     ['h' , 'help'                , 'display this help'],
 ])
 .bindHelp()
 .parseSystem();
+if (!opt.options['log-level']) opt.options['log-level']='info';
+if (!opt.options.port) opt.options.port=8080;
 //console.info(opt);
 
 var lugg = require('lugg');
