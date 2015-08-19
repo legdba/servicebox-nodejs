@@ -1,8 +1,16 @@
-{
-    "name": "library-rest-api",
-    "version": "0.0.1",
-    "description": "A simple library REST api",
-    "dependencies": {
-        "express": "~3.1.0"
-    }
+{  
+   "name":"servicebox-nodejs",
+   "version":"0.0.1",
+   "description":"A REST toolbox for container and Kubernetes testing",
+   "repository":{  
+      "type":"git",
+      "url":"https://github.com/legdba/servicebox-nodejs.git"
+   },
+   "license": "Apache-2.0",
+   "dependencies":{  
+      "express"    :"~3.1.0",
+      "bunyan"     :"~1.4.0",
+      "lugg"       :"~1.1.1",
+      "node-getopt":"~0.2.3"
+   }
 }
