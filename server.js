@@ -24,7 +24,8 @@ var lugg = require('lugg');
 
 var echo = function(req, res) {
     lugg('echo').info('echoing %s', req.params.txt);
-    res.send(req.params.txt)
+    res.type('plain/text');
+    res.send(req.params.txt);
 }
 
 var delayedEcho = function(req, res) {
@@ -33,6 +34,7 @@ var delayedEcho = function(req, res) {
     log.info('will echo in %sms: %s', delay, req.params.txt);
     setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
         log.info('echo after %sms: %s', delay, req.params.txt);
+        res.type('plain/text');
         res.send(req.params.txt);
     }, delay, req, res);
 };
@@ -44,7 +46,8 @@ var intensiveEcho = function(req, res) {
         Math.atan(Math.sqrt(Math.pow(i, 10)));
     }
     log.info('intensiveEcho: %s', req.params.txt);
-    res.send(req.params.txt)
+    res.type('plain/text');
+    res.send(req.params.txt);
 }
 
 var env_vars = function(req, res) {
@@ -62,21 +65,12 @@ var env_hostname = function(req, res) {
     res.send(os.hostname());
 }
 
-var main = function() {
-    // Read CLI args
-    opt = require('node-getopt').create([
-        ['p' , 'port=PORT'           , 'http server port; default=8080'],
-        ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-        ['h' , 'help'                , 'display this help'],
-    ])
-    .bindHelp()
-    .parseSystem();
-    if (!opt.options['log-level']) opt.options['log-level']='info';
-    if (!opt.options.port) opt.options.port=8080;
-    //console.info(opt);
-    
+var start = function(config) {
+    // Default config
+    config = config || {port:8080, loglevel:'info'};
+
     // Init logs
-    lugg.init({level: opt.options['log-level']});
+    lugg.init({level: config.loglevel});
     var log = lugg('servicebox');
 
     log.debug('DEBUG enabled');
@@ -104,7 +98,7 @@ var main = function() {
         //Show all errors in development
         app.use( express.errorHandler({ dumpExceptions: true, showStack: true }));
     });
-    
+
     // Bind REST resources
     var baseurl = '/api/v2';
     app.get(baseurl+'/echo/:txt', echo);
@@ -115,12 +109,29 @@ var main = function() {
     app.get(baseurl+'/env/hostname', env_hostname)
 
     //Start server
-    var port = opt.options.port;
+    var port = config.port;
     app.listen( port, function() {
         log.warn('Express server listening on port %d in %s mode', port, app.settings.env);
     });
 }
 
+exports.start = start;
+
 if(require.main === module) {
-  main();
+    // Read CLI args
+    opt = require('node-getopt').create([
+        ['p' , 'port=PORT'           , 'http server port; default=8080'],
+        ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
+        ['h' , 'help'                , 'display this help'],
+    ])
+    .bindHelp()
+    .parseSystem();
+    if (!opt.options['log-level']) opt.options['log-level']='info';
+    if (!opt.options.port) opt.options.port=8080;
+    //console.info(opt);
+
+    start({
+        port: opt.options.port,
+        loglevel: opt.options['log-level']
+    });
 }
