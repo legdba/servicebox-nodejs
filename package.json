@@ -1,23 +1,26 @@
-{  
-   "name":"servicebox-nodejs",
-   "version":"0.0.1",
-   "description":"A REST toolbox for container and Kubernetes testing",
-   "repository":{  
-      "type":"git",
-      "url":"https://github.com/legdba/servicebox-nodejs.git"
-   },
-   "license": "Apache-2.0",
-   "dependencies":{  
-      "express"    :"~3.1.0",
-      "bunyan"     :"~1.4.0",
-      "lugg"       :"~1.1.1",
-      "node-getopt":"~0.2.3",
-      "mocha"      :"~2.2.5",
-      "supertest"  :"~1.0.1",
-      "should"     :"~7.0.4",
-      "chai"       :"~3.2.0"
-   },
-   "scripts":{
-     "test":"./node_modules/mocha/bin/mocha ./test/test.js"
-   }
+{
+  "name": "servicebox-nodejs",
+  "version": "0.0.1",
+  "private": true,
+  "description": "NodeJS based REST service box for testing",
+  "keywords": [],
+  "author": "vincent@bourdaraud.com",
+  "license": "Apache-2.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.12.3",
+    "swagger-express-mw": "0.0.x",
+    "bunyan":"^1.4.0",
+    "lugg":"^1.1.1",
+    "node-getopt":"^0.2.3"
+  },
+  "devDependencies": {
+    "mocha":"^2.2.5",
+    "should": "^7.0.4",
+    "chai":"^3.2.0",
+    "supertest": "^1.0.1"
+  },
+  "scripts":{
+    "test":"./node_modules/mocha/bin/mocha ./test/*/*/*.js"
+  }
 }

@@ -20,106 +20,57 @@
  ##############################################################
  */
 
+'use strict';
+
 var lugg = require('lugg');
-
-var echo = function(req, res) {
-    lugg('echo').info('echoing %s', req.params.txt);
-    res.type('plain/text');
-    res.send(req.params.txt);
-}
-
-var delayedEcho = function(req, res) {
-    var delay = req.params.delay;
-    var log = lugg('delayedecho');
-    log.info('will echo in %sms: %s', delay, req.params.txt);
-    setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
-        log.info('echo after %sms: %s', delay, req.params.txt);
-        res.type('plain/text');
-        res.send(req.params.txt);
-    }, delay, req, res);
-};
-
-var intensiveEcho = function(req, res) {
-    var log = lugg('intensiveEcho');
-    log.info('about to intensiveEcho: %s', req.params.txt);
-    for (i = 100000000 ; i > 0 ; i--) {
-        Math.atan(Math.sqrt(Math.pow(i, 10)));
-    }
-    log.info('intensiveEcho: %s', req.params.txt);
-    res.type('plain/text');
-    res.send(req.params.txt);
-}
-
-var env_vars = function(req, res) {
-    res.send(process.env);
-}
-
-var env_var = function(req, res) {
-    var json = {};
-    json[req.params.name] = process.env[req.params.name];
-    res.send(json);
-}
-
-var os = require("os");
-var env_hostname = function(req, res) {
-    res.send(os.hostname());
-}
+var app = require('express')();
+module.exports = app; // for testing
 
 var start = function(config) {
     // Default config
-    config = config || {port:8080, loglevel:'info'};
+    var def = {port:8080, loglevel:'warn'};
+    config = config || def
+    var port = config.port || def.port;
+    var loglevel = config.loglevel || def.loglevel;
 
     // Init logs
-    lugg.init({level: config.loglevel});
+    lugg.init({level: loglevel});
     var log = lugg('servicebox');
 
     log.debug('DEBUG enabled');
     log.info('INFO enabled');
-
-    // Module dependencies.
-    var application_root = __dirname,
-        express = require( 'express' ); //Web framework
-
-    //Create server
-    var app = express();
-
-    // Configure server
-    app.set('case sensitive routing', true);
-    app.configure( function() {
-        //parses request body and populates request.body
-        app.use( express.bodyParser() );
-
-        //checks request.body for HTTP method overrides
-        app.use( express.methodOverride() );
-
-        //perform route lookup based on url and HTTP method
-        app.use( app.router );
-
-        //Show all errors in development
-        app.use( express.errorHandler({ dumpExceptions: true, showStack: true }));
+    
+    // Ensure async exception in callbacks get cautch and properly logged
+    var d = require('domain').create();
+    d.on('error', function(err){
+        log.error(err)
     });
+    
+    d.run(function() {
+        var SwaggerExpress = require('swagger-express-mw');
 
-    // Bind REST resources
-    var baseurl = '/api/v2';
-    app.get(baseurl+'/echo/:txt', echo);
-    app.get(baseurl+'/echooo/:txt/:delay', delayedEcho);
-    app.get(baseurl+'/ECHO/:txt', intensiveEcho);
-    app.get(baseurl+'/env/vars', env_vars)
-    app.get(baseurl+'/env/vars/:name', env_var)
-    app.get(baseurl+'/env/hostname', env_hostname)
+        var express_config = {
+          appRoot: __dirname // required config
+        };
 
-    //Start server
-    var port = config.port;
-    app.listen( port, function() {
-        log.warn('Express server listening on port %d in %s mode', port, app.settings.env);
+        SwaggerExpress.create(express_config, function(err, swaggerExpress) {
+          if (err) { throw err; }
+
+          // install middleware
+          swaggerExpress.register(app);
+
+          app.listen(port, function() {
+              log.warn('server listening on port %d in %s mode', port, app.settings.env)
+          });
+        });
     });
+    return app; // for testing purpose
 }
-
 exports.start = start;
 
 if(require.main === module) {
     // Read CLI args
-    opt = require('node-getopt').create([
+    var opt = require('node-getopt').create([
         ['p' , 'port=PORT'           , 'http server port; default=8080'],
         ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
         ['h' , 'help'                , 'display this help'],
@@ -134,4 +85,6 @@ if(require.main === module) {
         port: opt.options.port,
         loglevel: opt.options['log-level']
     });
+} else {
+    start(); // for testing purpose
 }

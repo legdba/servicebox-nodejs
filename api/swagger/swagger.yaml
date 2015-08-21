@@ -1,0 +1,146 @@
+swagger: "2.0"
+info:
+  version: "2.0"
+  title: Hello World App
+# during dev, should point to your local machine
+host: localhost:10010
+# basePath prefixes all resource paths 
+basePath: /api/v2
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /echo/{message}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: echo
+    get:
+      description: Returns it's own message to the caller
+      # used as the method name of the controller
+      operationId: echo
+      parameters:
+        - name: message
+          in: path
+          description: The message to return back
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /echo/{message}/{delay}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: echo
+    get:
+      description: Returns it's own message to the caller
+      # used as the method name of the controller
+      operationId: echo
+      parameters:
+        - name: message
+          in: path
+          description: The message to return back
+          required: true
+          type: string
+        - name: delay
+          in: path
+          description: The message to return back
+          required: true
+          type: number
+          format: float
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /env/vars:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: env
+    get:
+      description: Returns all server OS environment variables
+      # used as the method name of the controller
+      operationId: vars
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/ListOfString"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /env/vars/{name}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: env
+    get:
+      description: Returns {name} server OS environment variable
+      # used as the method name of the controller
+      operationId: vars
+      parameters:
+        - name: name
+          in: path
+          description: The name of the OS environment variable to return back
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        "404":
+          description: undefined variable
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /env/hostname:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: env
+    get:
+      description: Returns it's own message to the caller
+      # used as the method name of the controller
+      operationId: hostname
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+# complex objects have schema definitions
+definitions:
+  ListOfString:
+    type: object
+    additionalProperties:
+      type: 'string'
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
