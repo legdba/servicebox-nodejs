@@ -19,15 +19,16 @@
  ##############################################################
  */
 'use strict';
-var util = require('util');
 module.exports = {
   calcFiboNthRest: calcFiboNthRest,
-  sum: sum
+  sum: sum,
+  setBE: setBE
 };
-var lugg = require('lugg');
 
-var datastore = require('../helpers/cassandra_store');
-datastore.init(); // TODO: how to have a proper init with params while using swagger?
+var util = require('util');
+var lugg = require('lugg');
+var log = lugg('log');
+var backend = undefined;
 
 function calcFiboNth(num) {
     if (num > 2) {
@@ -38,7 +39,6 @@ function calcFiboNth(num) {
 }
 
 function calcFiboNthRest(req, res) {
-    var log = lugg('calcFiboNth');
     var n = req.swagger.params.n.value;
     if (n > 0) {
         log.info('calculating fibonacci Nth term for n=%s', n);
@@ -51,11 +51,16 @@ function calcFiboNthRest(req, res) {
 }
 
 function sum(req, res) {
-    var log = lugg('sum');
     var id = req.swagger.params.id.value;
     var n = req.swagger.params.n.value;
-    datastore.addAndGet(id, n, function(err, new_counter) {
+    backend.addAndGet(id, n, function(err, new_counter) {
         if (err) { throw err; }
         res.json({id:id, value:new_counter});
     });
+}
+
+// TODO: a global setter is a ugly hack; there shall be a better way when using NodeJS+Swagger...
+function setBE(be) {
+    backend = be;
+    log.debug("backend set:", be);
 }

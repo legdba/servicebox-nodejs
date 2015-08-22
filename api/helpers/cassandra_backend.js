@@ -19,22 +19,22 @@
  ##############################################################
  */
 'use strict';
+
+var makeClass = require('./make_class');
 var util = require('util');
 var lugg = require('lugg');
-
 var log = lugg('cassandra-clt');
-
 var cassandra = require('cassandra-driver');
-var client = undefined;
 
-/**
- * @param callback Executes callback(err) when finished
- */
-exports.init = function(contactPoints, callback) {
+var CassandraBackend = makeClass.makeClass();
+exports.CassandraBackend = CassandraBackend;
+
+CassandraBackend.prototype.constructor = function() {}
+
+CassandraBackend.prototype.init = function(contactPoints, callback) {
     contactPoints = contactPoints || {contactPoints: ['localhost:9042']};
-    if(client) { client.shutdown(); }
-    client = new cassandra.Client(contactPoints);
-    client.connect(function (err) {
+    this.client = new cassandra.Client(contactPoints);
+    this.client.connect(function (err) {
         if(callback) { callback(err); }
         else if (err) { throw err; }
     });
@@ -43,39 +43,31 @@ exports.init = function(contactPoints, callback) {
 /**
  * @param callback Executes callback(err, new_counter)
  */
-exports.addAndGet = function(id, number, callback) {
+CassandraBackend.prototype.addAndGet = function(id, number, callback) {
     var q = util.format("UPDATE calc.sum SET sum=sum+%s WHERE id='%s'", number, id);
-    log.info('CQL query:', q);
-    client.execute(q, function (err, results) {
-        if (err) {
-            if (callback) { callback(err); }
-            else { throw err; }
-        } else {
-            log.info('CQL result(s):', results);
-        }
+    var self = this;
+    log.debug('CQL query:', q);
+    self.client.execute(q, function (err, results) {
+       if (err) {
+           if (callback) { callback(err); }
+           else { throw err; }
+       } else {
+           log.debug('CQL result(s):', results);
+       }
 
-        if(callback) {
-            var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
-            log.info('CQL query:', q);
-            client.execute(q, function (err, results) {
-                if (err) {
-                    if (callback) { callback(err); }
-                    else { throw err; }
-                } else {
-                    log.info('CQL result(s):', results);
-                    if (callback) { callback( undefined, parseInt(results.rows[0].sum) ); }
-                }
-            })
-        }
-        else if (err) { throw err; }
+       if(callback) {
+           var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
+           log.debug('CQL query:', q);
+           self.client.execute(q, function (err, results) {
+               if (err) {
+                   if (callback) { callback(err); }
+                   else { throw err; }
+               } else {
+                   log.debug('CQL result(s):', results);
+                   if (callback) { callback( undefined, parseInt(results.rows[0].sum) ); }
+               }
+           })
+       }
+       else if (err) { throw err; }
     });
 }
-
-/*
-init();
-console.log('connected');
-addAndGet(0, 1, function(err, res) {
-    if (err) { throw err; }
-    console.log("addAndGet result: ", res);
-});
-*/
