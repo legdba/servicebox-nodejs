@@ -146,15 +146,48 @@ paths:
           in: path
           description: therm to find
           required: true
-          type: number
-          format: int64
+          type: integer
+          format: int32
       responses:
         "200":
           description: Success
           schema:
-            type: string
+            $ref: "#/definitions/FiboNthResponse"
         "422":
           description: invalid {n}
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /calc/sum/{id}/{n}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: calc
+    get:
+      description: Add {n} to counter with id {id} and return the new value
+      # used as the method name of the controller
+      operationId: sum
+      parameters:
+        - name: id
+          in: path
+          description: counter id
+          required: true
+          type: string
+        - name: n
+          in: path
+          description: value to add to counter
+          required: true
+          type: integer
+          format: int32
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Counter"
+        "422":
+          description: invalid {n} or {id}
           schema:
             $ref: "#/definitions/ErrorResponse"
         # responses may fall through to errors
@@ -174,3 +207,24 @@ definitions:
     properties:
       message:
         type: string
+  Counter:
+    required:
+      - id
+      - value
+    properties:
+      id:
+        type: string
+      value:
+        type: integer
+        format: int32
+  FiboNthResponse:
+    required:
+      - n
+      - term
+    properties:
+      n:
+        type: integer
+        format: int32
+      term:
+        type: integer
+        format: int32

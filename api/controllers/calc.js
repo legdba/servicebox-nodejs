@@ -21,9 +21,13 @@
 'use strict';
 var util = require('util');
 module.exports = {
-  calcFiboNthRest: calcFiboNthRest
+  calcFiboNthRest: calcFiboNthRest,
+  sum: sum
 };
 var lugg = require('lugg');
+
+var datastore = require('../helpers/cassandra_store');
+datastore.init(); // TODO: how to have a proper init with params while using swagger?
 
 function calcFiboNth(num) {
     if (num > 2) {
@@ -40,8 +44,18 @@ function calcFiboNthRest(req, res) {
         log.info('calculating fibonacci Nth term for n=%s', n);
         var x  = calcFiboNth(n);
         log.info('calculated fibonacci Nth term for n=%s : %s', n, x);
-        res.json(x);
+        res.json({n:n, term:x});
     } else {
         res.status(422).json({message:'n must be a positive integer'});
     }
+}
+
+function sum(req, res) {
+    var log = lugg('sum');
+    var id = req.swagger.params.id.value;
+    var n = req.swagger.params.n.value;
+    datastore.addAndGet(id, n, function(err, new_counter) {
+        if (err) { throw err; }
+        res.json({id:id, value:new_counter});
+    });
 }
