@@ -39,7 +39,7 @@ function vars(req, res) {
   }
 }
 
-var os = require("os");
+var os = require('os');
 function hostname(req, res) {
   res.json(os.hostname());
 }

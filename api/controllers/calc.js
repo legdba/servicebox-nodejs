@@ -21,29 +21,27 @@
 'use strict';
 var util = require('util');
 module.exports = {
-  echo: echo,
-  delayedEcho: delayedEcho,
+  calcFiboNthRest: calcFiboNthRest
 };
 var lugg = require('lugg');
 
-function echo(req, res) {
-    var log = lugg('echo');
-    var message = req.swagger.params.message.value;
-    log.info('echo: %s', message);
-    res.json(message);
+function calcFiboNth(num) {
+    if (num > 2) {
+        return calcFiboNth(num - 2) + calcFiboNth(num - 1);
+    } else {
+        return 1;
+    }
 }
 
-function delayedEcho(req, res) {
-    var log = lugg('delayedEcho');
-    var message = req.swagger.params.message.value;
-    var delay = delay = req.swagger.params.delay.value;
-    if (delay < 0) {
-        res.status(422).json({message: 'delay must be a positive float'});
+function calcFiboNthRest(req, res) {
+    var log = lugg('calcFiboNth');
+    var n = req.swagger.params.n.value;
+    if (n > 0) {
+        log.info('calculating fibonacci Nth term for n=%s', n);
+        var x  = calcFiboNth(n);
+        log.info('calculated fibonacci Nth term for n=%s : %s', n, x);
+        res.json(x);
     } else {
-        log.info('will echo after %sms: %s', delay, message);
-        setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
-            log.info('echo after %sms: %s', delay, message);
-            res.json(message);
-        }, delay, req, res);
+        res.status(422).json({message:'n must be a positive integer'});
     }
 }

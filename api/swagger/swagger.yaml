@@ -45,7 +45,7 @@ paths:
     get:
       description: Returns it's own message to the caller
       # used as the method name of the controller
-      operationId: echo
+      operationId: delayedEcho
       parameters:
         - name: message
           in: path
@@ -63,6 +63,10 @@ paths:
           description: Success
           schema:
             type: string
+        "422":
+          description: invalid {delay}
+          schema:
+            $ref: "#/definitions/ErrorResponse"
         # responses may fall through to errors
         default:
           description: Error
@@ -125,6 +129,34 @@ paths:
           description: Success
           schema:
             type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /calc/fibo-nth/{n}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: calc
+    get:
+      description: Finding the nth term fibonacci sequence; this is computational intensive, especially with {n} greater than 40.
+      # used as the method name of the controller
+      operationId: calcFiboNthRest
+      parameters:
+        - name: n
+          in: path
+          description: therm to find
+          required: true
+          type: number
+          format: int64
+      responses:
+        "200":
+          description: Success
+          schema:
+            type: string
+        "422":
+          description: invalid {n}
+          schema:
+            $ref: "#/definitions/ErrorResponse"
         # responses may fall through to errors
         default:
           description: Error

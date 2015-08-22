@@ -23,7 +23,8 @@
 'use strict';
 
 var lugg = require('lugg');
-var app = require('express')();
+var express = require('express');
+var app = express();
 module.exports = app; // for testing
 
 var start = function(config) {
@@ -50,18 +51,19 @@ var start = function(config) {
         var SwaggerExpress = require('swagger-express-mw');
 
         var express_config = {
-          appRoot: __dirname // required config
+            appRoot: __dirname // required config
         };
 
         SwaggerExpress.create(express_config, function(err, swaggerExpress) {
-          if (err) { throw err; }
+            if (err) { throw err; }
 
-          // install middleware
-          swaggerExpress.register(app);
+            // install middleware
+            swaggerExpress.register(app);
 
-          app.listen(port, function() {
-              log.warn('server listening on port %d in %s mode', port, app.settings.env)
-          });
+            // start server
+            app.listen(port, function() {
+                log.warn('server listening on port %d in %s mode', port, app.settings.env)
+            });
         });
     });
     return app; // for testing purpose
@@ -86,5 +88,5 @@ if(require.main === module) {
         loglevel: opt.options['log-level']
     });
 } else {
-    start(); // for testing purpose
+    start({loglevel:'fatal'}); // for testing purpose
 }

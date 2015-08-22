@@ -27,46 +27,28 @@ process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('echo', function() {
+  describe('calc', function() {
 
-    describe('GET /api/v2/echo/{message}', function() {
+    describe('GET /api/v2/calc/fibo-nth/{n}', function() {
 
-      it('should echo passed {message}', function(done) {
+      it('should return 832040 for {n}=30', function(done) {
 
         request(app)
-          .get('/api/v2/echo/foo')
+          .get('/api/v2/calc/fibo-nth/30')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql("foo");
+            res.body.should.eql(832040);
             done();
           });
       });
 
-    });
-
-    describe('GET /api/v2/echo/{message}/{delay}', function() {
-
-      it('should echo passed {message}', function(done) {
+      it('should return 422 on negative {n}', function(done) {
 
         request(app)
-          .get('/api/v2/echo/foo/1')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql("foo");
-            done();
-          });
-      });
-
-      it('should return 422 on negative {delay}', function(done) {
-
-        request(app)
-          .get('/api/v2/echo/foo/-1')
+          .get('/api/v2/calc/fibo-nth/-1')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(422, done);
