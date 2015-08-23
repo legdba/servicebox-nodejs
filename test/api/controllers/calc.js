@@ -24,9 +24,7 @@ var request = require('supertest');
 var app = require('../../../server');
 
 // TODO: there must be a way with swagger+express to have this parametrized per test
-var be = require('../../../api/helpers/memory_backend').MemoryBackend();
-be.init();
-require('../../../api/controllers/calc').setBE(be);
+var MemoryBackend = require('../../../api/helpers/memory_backend').MemoryBackend;
 
 process.env.A127_ENV = 'test';
 
@@ -64,7 +62,7 @@ describe('controllers', function() {
     describe('GET /api/v2/calc/sum/{id}/{n}', function() {
 
       it('should get count 1 on first call with {n}=1', function(done) {
-
+        app.locals = {backend: MemoryBackend()};
         request(app)
           .get('/api/v2/calc/sum/0/1')
           .set('Accept', 'application/json')
@@ -78,7 +76,7 @@ describe('controllers', function() {
       });
 
       it('should get count 3 on first call with {n}=2', function(done) {
-
+        app.locals = {backend: MemoryBackend()};
         request(app)
           .get('/api/v2/calc/sum/0/2')
           .set('Accept', 'application/json')

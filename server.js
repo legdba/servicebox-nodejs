@@ -64,11 +64,17 @@ var start = function(config) {
     d.run(function() {
         // Set Backend
         var calc = require('./api/controllers/calc');
-        var be = build_be(backendType);
-        be.init(backendOpts, function(err) {
+        var backend = build_be(backendType);
+        backend.init(backendOpts, function(err) {
             if (err) { throw err; }
             else { log.info('connected to Backend'); }
-            calc.setBE(be);
+
+            app.use(function(req, res, next){
+                req.locals = {
+                    backend: backend
+                };
+                next();
+            });
 
             // Init swagger and express
             var SwaggerExpress = require('swagger-express-mw');

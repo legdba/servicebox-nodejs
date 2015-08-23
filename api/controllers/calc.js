@@ -21,14 +21,12 @@
 'use strict';
 module.exports = {
   calcFiboNthRest: calcFiboNthRest,
-  sum: sum,
-  setBE: setBE
+  sum: sum
 };
 
 var util = require('util');
 var lugg = require('lugg');
 var log = lugg('log');
-var backend = null;
 
 function calcFiboNth(num) {
     if (num > 2) {
@@ -50,9 +48,13 @@ function calcFiboNthRest(req, res) {
     }
 }
 
+/**
+ * requirement: req.locals.backend shall be set with a backend (see cassandra_backend.js)
+ */
 function sum(req, res) {
     var id = req.swagger.params.id.value;
     var n = req.swagger.params.n.value;
+    var backend = req.locals.backend
     if (!backend) {
         res.status(500).json({message: 'backend is null'});
         return
@@ -61,10 +63,4 @@ function sum(req, res) {
         if (err) { throw err; }
         res.json({id:id, value:new_counter});
     });
-}
-
-// TODO: a global setter is a ugly hack; there shall be a better way when using NodeJS+Swagger...
-function setBE(be) {
-    backend = be;
-    log.debug("backend set:", be);
 }
