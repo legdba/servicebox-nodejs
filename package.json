@@ -12,7 +12,8 @@
     "swagger-express-mw": "0.0.x",
     "bunyan":"^1.4.0",
     "lugg":"^1.1.1",
-    "node-getopt":"^0.2.3"
+    "node-getopt":"^0.2.3",
+    "cassandra-driver":"^2.2.0"
   },
   "devDependencies": {
     "mocha":"^2.2.5",
