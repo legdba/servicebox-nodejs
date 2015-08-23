@@ -22,8 +22,6 @@ var should = require('should');
 var expect = require('chai').expect;
 var request = require('supertest');
 var app = require('../../../server');
-
-// TODO: there must be a way with swagger+express to have this parametrized per test
 var MemoryBackend = require('../../../api/helpers/memory_backend').MemoryBackend;
 
 process.env.A127_ENV = 'test';
