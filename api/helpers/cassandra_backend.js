@@ -64,7 +64,7 @@ CassandraBackend.prototype.addAndGet = function(id, number, callback) {
                    else { throw err; }
                } else {
                    log.debug('CQL result(s):', results);
-                   if (callback) { callback( undefined, parseInt(results.rows[0].sum) ); }
+                   if (callback) { callback( null, parseInt(results.rows[0].sum) ); }
                }
            })
        }

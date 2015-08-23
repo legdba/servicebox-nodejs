@@ -28,7 +28,7 @@ module.exports = {
 var util = require('util');
 var lugg = require('lugg');
 var log = lugg('log');
-var backend = undefined;
+var backend = null;
 
 function calcFiboNth(num) {
     if (num > 2) {
