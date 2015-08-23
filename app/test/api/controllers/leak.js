@@ -29,11 +29,11 @@ process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('env', function() {
+  describe('leak', function() {
 
     describe('GET /api/v2/heap/leak/1024', function() {
 
-      it('should leak 1024 bytes of heap for a total of 1024 when called once', function(done) {
+      it('should leak 1024 bytes of heap for a total of 1024 when called 1st time', function(done) {
 
         request(app)
           .get('/api/v2/heap/leak/1024')
@@ -47,7 +47,7 @@ describe('controllers', function() {
           });
       });
 
-      it('should leak 1024 bytes of heap for a total of 2048 when called once', function(done) {
+      it('should leak 1024 bytes of heap for a total of 2048 when called 2nd time', function(done) {
 
         request(app)
           .get('/api/v2/heap/leak/1024')
