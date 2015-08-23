@@ -18,10 +18,15 @@
  # under the License.
  ##############################################################
  */
-var should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
+var should = require('should');
+var expect = require('chai').expect;
+var request = require('supertest');
+var app = require('../../../server');
+
+// TODO: there must be a way with swagger+express to have this parametrized per test
+var be = require('../../../api/helpers/memory_backend').MemoryBackend();
+be.init();
+require('../../../api/controllers/calc').setBE(be);
 
 process.env.A127_ENV = 'test';
 
@@ -52,6 +57,38 @@ describe('controllers', function() {
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(422, done);
+      });
+
+    });
+
+    describe('GET /api/v2/calc/sum/{id}/{n}', function() {
+
+      it('should get count 1 on first call with {n}=1', function(done) {
+
+        request(app)
+          .get('/api/v2/calc/sum/0/1')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end(function(err, res) {
+            should.not.exist(err);
+            res.body.should.eql({id:'0', value:1});
+            done();
+          });
+      });
+
+      it('should get count 3 on first call with {n}=2', function(done) {
+
+        request(app)
+          .get('/api/v2/calc/sum/0/2')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end(function(err, res) {
+            should.not.exist(err);
+            res.body.should.eql({id:'0', value:3});
+            done();
+          });
       });
 
     });
