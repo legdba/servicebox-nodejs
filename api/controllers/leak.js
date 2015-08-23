@@ -20,29 +20,34 @@
  */
 'use strict';
 module.exports = {
-  echo: echo,
-  delayedEcho: delayedEcho,
+  leak: leak,
+  free: free
 };
 var util = require('util');
 var lugg = require('lugg');
-var log = lugg('echo');
+var log = lugg('leak');
 
-function echo(req, res) {
-    var message = req.swagger.params.message.value;
-    log.info('echo: %s', message);
-    res.json(message);
+var retainedObjs = [];
+var retainedSize = 0;
+
+function leak(req, res) {
+    var size = req.swagger.params.size.value;
+    if (size <= 0) {
+        res.status(422).json({message: '{size} shall be a positive integer'});
+        return;
+    }
+    // Leak references to leak heap
+    // (leaking big arrays, strings or buffers would leak the RSS, not the heap, and would not cause an OOM error
+    // Leak random bytes to workaround various OS and NodeJS tricks with paging and memory compression
+    for (var i = size/2; i > 0; i--) { retainedObjs.push(1); }
+    retainedSize += size;
+    log.info('leaked %d bytes of heap for a total of %d bytes with %d buffer objects; process size is ', size, retainedSize, retainedObjs.length, process.memoryUsage());
+    res.json({retainedHeap: retainedSize});
 }
 
-function delayedEcho(req, res) {
-    var message = req.swagger.params.message.value;
-    var delay = delay = req.swagger.params.delay.value;
-    if (delay < 0) {
-        res.status(422).json({message: 'delay must be a positive float'});
-    } else {
-        log.info('will echo after %sms: %s', delay, message);
-        setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
-            log.info('echo after %sms: %s', delay, message);
-            res.json(message);
-        }, delay, req, res);
-    }
+function free(req, res) {
+    retainedObjs = [];
+    retainedSize = 0;
+    log.info('released leaked heap');
+    res.json({retainedHeap: retainedSize});
 }

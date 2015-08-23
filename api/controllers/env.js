@@ -19,11 +19,11 @@
  ##############################################################
  */
 'use strict';
-var util = require('util');
 module.exports = {
   vars: vars,
   hostname: hostname
 };
+var util = require('util');
 
 function vars(req, res) {
   if (req.swagger.params.name != undefined) {

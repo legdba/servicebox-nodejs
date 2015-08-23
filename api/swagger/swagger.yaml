@@ -195,6 +195,51 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
+  /heap/leak/{size}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: leak
+    get:
+      description: Cause {size} bytes of heap to leak
+      # used as the method name of the controller
+      operationId: leak
+      parameters:
+        - name: size
+          in: path
+          description: number of bytes of heap to leak
+          required: true
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/RetainedHeap"
+        "422":
+          description: invalid {size}
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /heap/free:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: leak
+    get:
+      description: Cause all previously leaked heap bytes to be releases; they will become candidate to garbage collection
+      # used as the method name of the controller
+      operationId: free
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/RetainedHeap"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
 # complex objects have schema definitions
 definitions:
   ListOfString:
@@ -228,3 +273,10 @@ definitions:
       term:
         type: integer
         format: int32
+  RetainedHeap:
+    required:
+      - retainedHeap
+    properties:
+      retainedHeap:
+        type: integer
+        format: int64
