@@ -31,7 +31,7 @@ exports.CassandraBackend = CassandraBackend;
 
 CassandraBackend.prototype.constructor = function() {}
 
-CassandraBackend.prototype.init = function(contactPoints, callback) {
+CassandraBackend.prototype.init = function init(contactPoints, callback) {
     contactPoints = contactPoints || {contactPoints: ['localhost:9042']};
     this.client = new cassandra.Client(contactPoints);
     this.client.connect(function (err) {
@@ -43,7 +43,7 @@ CassandraBackend.prototype.init = function(contactPoints, callback) {
 /**
  * @param callback Executes callback(err, new_counter)
  */
-CassandraBackend.prototype.addAndGet = function(id, number, callback) {
+CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
     var q = util.format("UPDATE calc.sum SET sum=sum+%s WHERE id='%s'", number, id);
     var self = this;
     log.debug('CQL query:', q);

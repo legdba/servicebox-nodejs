@@ -30,7 +30,7 @@ exports.MemoryBackend = MemoryBackend;
 
 MemoryBackend.prototype.constructor = function() {}
 
-MemoryBackend.prototype.init = function(contactPoints, callback) {
+MemoryBackend.prototype.init = function init(contactPoints, callback) {
     this.counters = {};
     if(callback) callback(null);
 }
@@ -38,7 +38,7 @@ MemoryBackend.prototype.init = function(contactPoints, callback) {
 /**
  * @param callback Executes callback(err, new_counter)
  */
-MemoryBackend.prototype.addAndGet = function(id, number, callback) {
+MemoryBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
     if (this.counters[id]) this.counters[id] += number;
     else this.counters[id] = number;
     callback(undefined, this.counters[id]);
