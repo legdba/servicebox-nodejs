@@ -23,7 +23,7 @@ module.exports = {
   echo: echo,
   delayedEcho: delayedEcho,
 };
-var util = require('util');
+//var util = require('util');
 var lugg = require('lugg');
 var log = lugg('echo');
 
@@ -35,7 +35,7 @@ function echo(req, res) {
 
 function delayedEcho(req, res) {
     var message = req.swagger.params.message.value;
-    var delay = delay = req.swagger.params.delay.value;
+    var delay = req.swagger.params.delay.value;
     if (delay < 0) {
         res.status(422).json({message: 'delay must be a positive float'});
     } else {

@@ -24,7 +24,7 @@ module.exports = {
   sum: sum
 };
 
-var util = require('util');
+//var util = require('util');
 var lugg = require('lugg');
 var log = lugg('log');
 
@@ -54,10 +54,10 @@ function calcFiboNthRest(req, res) {
 function sum(req, res) {
     var id = req.swagger.params.id.value;
     var n = req.swagger.params.n.value;
-    var backend = req.locals.backend
+    var backend = req.locals.backend;
     if (!backend) {
         res.status(500).json({message: 'backend is null'});
-        return
+        return;
     }
     backend.addAndGet(id, n, function(err, new_counter) {
         if (err) { throw err; }

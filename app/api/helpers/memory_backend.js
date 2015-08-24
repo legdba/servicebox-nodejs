@@ -21,25 +21,24 @@
 'use strict';
 
 var makeClass = require('./make_class');
-var util = require('util');
-var lugg = require('lugg');
-var cassandra = require('cassandra-driver');
+//var util = require('util');
+//var lugg = require('lugg');
 
 var MemoryBackend = makeClass.makeClass();
 exports.MemoryBackend = MemoryBackend;
 
-MemoryBackend.prototype.constructor = function() {}
+MemoryBackend.prototype.constructor = function() {};
 
 MemoryBackend.prototype.init = function init(contactPoints, callback) {
     this.counters = {};
-    if(callback) callback(null);
-}
+    if(callback) { callback(null); }
+};
 
 /**
  * @param callback Executes callback(err, new_counter)
  */
 MemoryBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
-    if (this.counters[id]) this.counters[id] += number;
-    else this.counters[id] = number;
+    if (this.counters[id]) { this.counters[id] += number; }
+    else { this.counters[id] = number; }
     callback(undefined, this.counters[id]);
-}
+};

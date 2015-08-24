@@ -29,7 +29,7 @@ var cassandra = require('cassandra-driver');
 var CassandraBackend = makeClass.makeClass();
 exports.CassandraBackend = CassandraBackend;
 
-CassandraBackend.prototype.constructor = function() {}
+CassandraBackend.prototype.constructor = function() {};
 
 CassandraBackend.prototype.init = function init(contactPoints, callback) {
     contactPoints = contactPoints || {contactPoints: ['localhost:9042']};
@@ -38,7 +38,7 @@ CassandraBackend.prototype.init = function init(contactPoints, callback) {
         if(callback) { callback(err); }
         else if (err) { throw err; }
     });
-}
+};
 
 /**
  * @param callback Executes callback(err, new_counter)
@@ -66,8 +66,8 @@ CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) 
                    log.debug('CQL result(s):', results);
                    if (callback) { callback( null, parseInt(results.rows[0].sum) ); }
                }
-           })
+           });
        }
        else if (err) { throw err; }
     });
-}
+};

@@ -23,13 +23,13 @@ module.exports = {
   vars: vars,
   hostname: hostname
 };
-var util = require('util');
+//var util = require('util');
 
 function vars(req, res) {
-  if (req.swagger.params.name != undefined) {
-    var name = req.swagger.params.name.value
+  if (req.swagger.params.name !== undefined) {
+    var name = req.swagger.params.name.value;
     var value = process.env[name];
-    if (value != undefined) {
+    if (value !== undefined) {
       res.json(value);
     } else {
       res.status(404).json({message: 'undefined variable: '+name});

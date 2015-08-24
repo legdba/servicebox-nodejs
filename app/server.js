@@ -37,12 +37,12 @@ var build_be = function(type) {
         default:
             throw new Error("invalid backend type: " + type);
     }
-}
+};
 
 var start = function(config) {
     // Default config
     var def = {port:8080, loglevel:'warn', backendType:'memory', backendOpts:{} };
-    config = config || def
+    config = config || def;
     var port = config.port || def.port;
     var loglevel = config.loglevel || def.loglevel;
     var backendType = config.backendType || def.backendType;
@@ -57,13 +57,12 @@ var start = function(config) {
     
     // Ensure async exception in callbacks get cautch and properly logged
     var d = require('domain').create();
-    d.on('error', function(err){
-        log.error(err)
+    d.on('error', function(err) {
+        log.error(err);
     });
     
     d.run(function() {
         // Set Backend
-        var calc = require('./api/controllers/calc');
         var backend = build_be(backendType);
         backend.init(backendOpts, function(err) {
             if (err) { throw err; }
@@ -91,13 +90,13 @@ var start = function(config) {
 
                 // start server
                 app.listen(port, function() {
-                    log.warn('server listening on port %d in %s mode', port, app.settings.env)
+                    log.warn('server listening on port %d in %s mode', port, app.settings.env);
                 });
             });
         });
     });
     return app; // for testing purpose
-}
+};
 exports.start = start;
 
 if(require.main === module) {
@@ -111,11 +110,11 @@ if(require.main === module) {
     ])
     .bindHelp()
     .parseSystem();
-    if (!opt.options['log-level']) opt.options['log-level']='info';
-    if (!opt.options.port) opt.options.port=8080;
-    if (!opt.options['be-type']) opt.options['be-type']='memory';
-    if (opt.options['be-type'] == 'cassandra' && opt.options['be-opts'] == undefined) opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}';
-    if (opt.options['be-type'] == 'memory') opt.options['be-opts'] = "{}";
+    if (!opt.options['log-level']) { opt.options['log-level']='info'; }
+    if (!opt.options.port) { opt.options.port=8080; }
+    if (!opt.options['be-type']) { opt.options['be-type']='memory'; }
+    if (opt.options['be-type'] === 'cassandra' && opt.options['be-opts'] == undefined) { opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}'; }
+    if (opt.options['be-type'] === 'memory') { opt.options['be-opts'] = "{}"; }
     //console.info(opt);
 
     start({
