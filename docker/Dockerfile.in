@@ -25,8 +25,11 @@
 # docker run -ti --rm -p 80:8080 quay.io/legdba/__APP_NAME__:__APP_VERSION__ --help
 #
 ##############################################################
-FROM legdba/javaw:jdk-8u51
+FROM alpine:3.2
 MAINTAINER Vincent Bourdaraud <vincent@bourdaraud.com>
+
+# Install nodejs and npm
+RUN apk upgrade --update && apk add nodejs
 
 # Prepare for dir
 RUN mkdir /opt/__APP_FULLNAME__
@@ -41,8 +44,9 @@ ENTRYPOINT [\
     ]
 EXPOSE 8080
 
-# Add appl and tests that it is working fine
+# Add application and tests that it is working fine
 ADD __ARTIFACT__.tgz /opt/__APP_FULLNAME__/
 COPY Dockerfile /opt/__APP_FULLNAME__/
-RUN npm test && \
+RUN npm install && \
+    npm test && \
     npm start -- --help
