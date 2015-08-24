@@ -32,7 +32,7 @@ MAINTAINER Vincent Bourdaraud <vincent@bourdaraud.com>
 RUN apk upgrade --update && apk add nodejs
 
 # Prepare for dir
-RUN mkdir /opt/__APP_FULLNAME__
+RUN mkdir -p /opt/__APP_FULLNAME__
 
 # Prepare for service
 WORKDIR /opt/__APP_FULLNAME__
@@ -50,3 +50,6 @@ COPY Dockerfile /opt/__APP_FULLNAME__/
 RUN npm install && \
     npm test && \
     npm start -- --help
+
+# Set to production mode (only after npm test to avoid mocha tests to fail)
+ENV NODE_ENV production
