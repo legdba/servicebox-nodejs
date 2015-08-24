@@ -1,0 +1,14 @@
+machine:
+  node:
+    version: 0.12.7
+  services:
+    - docker
+deployment:
+  production: # just a label; label names are completely up to you
+    branch: master
+    commands:
+      - ./build_docker.sh
+  staging:
+    branch: /.*/
+    commands:
+      - ./build_docker.sh
