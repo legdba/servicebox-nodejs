@@ -113,7 +113,7 @@ if(require.main === module) {
     if (!opt.options['log-level']) { opt.options['log-level']='info'; }
     if (!opt.options.port) { opt.options.port=8080; }
     if (!opt.options['be-type']) { opt.options['be-type']='memory'; }
-    if (opt.options['be-type'] === 'cassandra' && opt.options['be-opts'] == undefined) { opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}'; }
+    if (opt.options['be-type'] === 'cassandra' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}'; }
     if (opt.options['be-type'] === 'memory') { opt.options['be-opts'] = "{}"; }
     //console.info(opt);
 

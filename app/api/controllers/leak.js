@@ -23,7 +23,7 @@ module.exports = {
   leak: leak,
   free: free
 };
-var util = require('util');
+//var util = require('util');
 var lugg = require('lugg');
 var log = lugg('leak');
 
