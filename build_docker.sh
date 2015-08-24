@@ -157,6 +157,11 @@ fi
 echo
 echo "=== checking environment ==="
 
+# Get CircleCI auto-env
+if [ -n ${CIRCLECI} ]; then
+    ARTIFACTS_PATH=${CIRCLE_ARTIFACTS}
+fi
+
 # Check the env contains the Docker repo to push Docker image to
 # use "quai.io" for quay.io
 # use "hub.docker.com" for default docker hub
@@ -187,7 +192,7 @@ then
     exit 1
 fi
 
-# Check the env contains artifact path; auto set by CircleCI, Travis and so on
+# Check the env contains artifact path (auto set when using CircleCI, see above)
 if [ -z "${ARTIFACTS_PATH}" ]
 then
     echo "please set ARTIFACTS_PATH"
