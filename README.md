@@ -1,7 +1,9 @@
+[![License Apache](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 [![Circle CI](https://circleci.com/gh/legdba/servicebox-nodejs.svg?style=shield)](https://circleci.com/gh/legdba/servicebox-nodejs)
-[![Docker Repository on Quay.io](https://quay.io/repository/legdba/servicebox-nodejs/status "Docker Repository on Quay.io")](https://quay.io/repository/legdba/servicebox-nodejs)
+[![Docker Image](https://quay.io/repository/legdba/servicebox-nodejs/status "Docker Repository on Quay.io")](https://quay.io/repository/legdba/servicebox-nodejs)
+[![Code Climate](https://codeclimate.com/github/legdba/servicebox-nodejs/badges/gpa.svg)](https://codeclimate.com/github/legdba/servicebox-nodejs)
 # Overview
-Toolbox of HTTP services for infra and containers testing with HTTP echo, statfull sum operation, CPU intensive operation, simulated leaks, etc.
+HTTP REST services for infra/containers testing: echo, leaks, CPU-intensive ops, backend usage, etc.
 
 # Usage
 The application runs either as a NodeJS application or as a Docker container.

@@ -8,21 +8,21 @@
   "license": "Apache-2.0",
   "main": "app/server.js",
   "dependencies": {
+    "bunyan": "^1.4.0",
+    "cassandra-driver": "^2.2.0",
     "express": "^4.12.3",
-    "swagger-express-mw": "0.0.x",
-    "bunyan":"^1.4.0",
-    "lugg":"^1.1.1",
-    "node-getopt":"^0.2.3",
-    "cassandra-driver":"^2.2.0"
+    "lugg": "^1.1.1",
+    "node-getopt": "^0.2.3",
+    "swagger-express-mw": "0.0.x"
   },
   "devDependencies": {
-    "mocha":"^2.2.5",
+    "mocha": "^2.2.5",
     "should": "^7.0.4",
-    "chai":"^3.2.0",
+    "chai": "^3.2.0",
     "supertest": "^1.0.1"
   },
-  "scripts":{
+  "scripts": {
     "start": "app/server.js",
-    "test":"./node_modules/mocha/bin/mocha ./app/test/*/*/*.js"
+    "test": "./node_modules/mocha/bin/mocha ./app/test/*/*/*.js"
   }
 }
