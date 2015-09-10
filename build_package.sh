@@ -111,8 +111,8 @@ function package_gradle_fatjar() {
     SHA="${PKG}.sha1"
 
     # Rename, archive and sha1
-    cp ./build/libs/${FN} ${JAR} || exit 3
-    cd ${PKGDIR} || exit 3
+    cp ./build/libs/${FN} ${PKG_DIR}/${JAR} || exit 3
+    cd ${PKG_DIR} || exit 3
     tar cvf ${PKG} ${JAR} || exit 3
     rm ${JAR} || exit 3
     sha1sum ${PKG} > ${SHA} || exit 3

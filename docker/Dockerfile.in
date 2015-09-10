@@ -16,40 +16,36 @@
 # specific language governing permissions and limitations
 # under the License.
 ##############################################################
-# NodeJS __APP_NAME__ version __APP_VERSION__
+# Java __APP_FULLNAME__ service for testing purpose.
 #
 # Run server with:
-# docker run -d -p 80:8080 quay.io/legdba/__APP_NAME__:__APP_VERSION__
+# docker run -d -p 80:8080 quay.io/legdba/httpecho:[tag]
 #
 # To get the list of supported arguments run
-# docker run -ti --rm -p 80:8080 quay.io/legdba/__APP_NAME__:__APP_VERSION__ --help
+# docker run -ti --rm -p 80:8080 quay.io/legdba/httpecho:[tag] --help
 #
 ##############################################################
-FROM alpine:3.2
+FROM legdba/javaw:jdk-8u51
 MAINTAINER Vincent Bourdaraud <vincent@bourdaraud.com>
 
-# Install nodejs and npm
-RUN apk upgrade --update && apk add nodejs
-
 # Prepare for dir
-RUN mkdir -p /opt/__APP_FULLNAME__
+RUN mkdir /opt/__APP_FULLNAME__
 
 # Prepare for service
 WORKDIR /opt/__APP_FULLNAME__
 CMD ["-p", "8080"]
 ENTRYPOINT [\
-    "npm",\
-    "start",\
-    "--"\
+    "javaw",\
+    "-XX:OnOutOfMemoryError=kill -9 %p",\
+    "-Xms50m",\
+    "-Xmx50m",\
+    "-jar",\
+    "/opt/__APP_FULLNAME__/__APP_FULLNAME__.jar"\
     ]
 EXPOSE 8080
 
-# Add application and tests that it is working fine
-ADD __ARTIFACT__.tgz /opt/__APP_FULLNAME__/
+# Add Java App (copy one by one because of a bug on Docker 1.2-circleci on
+# CircleCI causing multi-copy to skip some files and store them the wrong place)
+ADD __APP_FULLNAME__.tgz /opt/__APP_FULLNAME__/
 COPY Dockerfile /opt/__APP_FULLNAME__/
-RUN npm install && \
-    npm test && \
-    npm start -- --help
-
-# Set to production mode (only after npm test to avoid mocha tests to fail)
-ENV NODE_ENV production
+RUN javaw -jar __APP_FULLNAME__.jar --help

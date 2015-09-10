@@ -22,8 +22,16 @@
 #
 # This script MUST be run from the git repo of the application.
 #
-# Requirements for the archive:
-# - TODO
+# Requirements for the application building:
+# - The application shall either be a standard npm application or gradle
+#   uber-jar artifact
+# - NPM requirements:
+#   - Shall have a standar package.json file at the repo root with
+#     - a main property set to the application main JS file
+# - Gradle requirements:
+#   - Shall have gradlew script at the repo root with
+#     - A 'fatJar' target building a single uber jar and outputing the jar name
+#       to stdout with the following format: "fatJar : {filename}"
 #
 # Requirements for the Dockerfile.in
 # - use the following tokens for substitution with the associated variables:
@@ -37,7 +45,11 @@
 #   - __ARTIFACT__      : same as __APP_FULL_NAME__ (backward compatibility).
 #
 # ENV requirements:
-# - TODO
+# - ARTIFACTS_PATH     -> path where to store artifacts backuped by the CI tool
+# - DOCKER_REPO        -> docker repo where to store the container image
+# - DOCKER_REPO_USER   -> docker repo username
+# - DOCKER_REPO_TOKEN  -> docker repo authentication token
+# - DOCKER_REPO_EMAIL  -> docker repo user email
 #
 # In addition to that the script auto-detect the application
 # name version and branch based on git commands. The name is
@@ -166,7 +178,8 @@ echo
 echo "=== checking environment ==="
 
 # Get CircleCI auto-env
-if [ -n ${CIRCLECI} ]; then
+if [ ${CIRCLECI} ]
+then
     ARTIFACTS_PATH=${CIRCLE_ARTIFACTS}
 fi
 
@@ -226,14 +239,12 @@ APP_FULLNAME="${APP_NAME}-${APP_VERSION}"
 ARTIFACT="${APP_FULLNAME}"
 
 echo
-echo "APP_NAME       = ${APP_NAME}"
-echo "APP_VERSION    = ${APP_VERSION}"
-echo "APP_FULLNAME   = ${APP_FULLNAME}"
-echo "APP_BRANCH     = ${APP_BRANCH}"
-echo "BRANCH         = ${BRANCH}"
-echo "VERSION        = ${VERSION}"
-echo "ARTIFACT       = ${ARTIFACT}"
-echo "ARTIFACTS_PATH = ${ARTIFACTS_PATH}"
+echo "APP_NAME                   = ${APP_NAME}"
+echo "APP_VERSION                = ${APP_VERSION}"
+echo "APP_FULLNAME               = ${APP_FULLNAME}"
+echo "APP_BRANCH (empty==master) = ${APP_BRANCH}"
+echo "ARTIFACT                   = ${ARTIFACT}"
+echo "ARTIFACTS_PATH             = ${ARTIFACTS_PATH}"
 
 ###############################################################################
 # Generate archive
