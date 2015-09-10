@@ -28,15 +28,18 @@ var lugg = require('lugg');
 var log = lugg('health');
 
 function health(req, res) {
+    log.info("health(100%) -> up");
     res.json({message:'up'});
 }
 
 function health_conditional(req, res) {
-    var chance_of_being_up = req.swagger.params.f.value
-    if (chance_of_being_up < 0) chance_of_being_up = 0;
+    var chance_of_being_up = req.swagger.params.f.value;
+    if (chance_of_being_up < 0) { chance_of_being_up = 0; }
     if (Math.random() > chance_of_being_up) {
+        log.info("health(%d%) -> down", 100*chance_of_being_up);
         return res.status(500).json({message: 'down'});
     } else {
-        return res.json({message: up});
+        log.info("health(%d%) -> up", 100*chance_of_being_up);
+        return res.json({message: 'up'});
     }
 }

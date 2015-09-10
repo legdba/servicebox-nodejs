@@ -26,7 +26,15 @@
 # - TODO
 #
 # Requirements for the Dockerfile.in
-# - TODO
+# - use the following tokens for substitution with the associated variables:
+#   - __APP_NAME__      : replaced with ${APP_NAME} which is set to the repo
+#                        name as returned by git.
+#                        (basename `git rev-parse --show-toplevel`)
+#   - __APP_VERSION__   : replaced with the ${APP_VERSION} which is set with
+#                        the git revision, short hash and the branch if it is
+#                        different from master.
+#   - __APP_FULL_NAME__ : same as __APP_NAME_NAME__ + __APP_VERSION__
+#   - __ARTIFACT__      : same as __APP_FULL_NAME__ (backward compatibility).
 #
 # ENV requirements:
 # - TODO
@@ -93,7 +101,7 @@ Options:\n\
 \n\
   --local               Do not push docker images to docker registry.\n\
 \n\
-  --dry                 Dry run; commands are echoed but not run.\n\
+  --dryrun              Dry run; commands are echoed but not run.\n\
 \n\
   -h,--help             Display this help.\n\
 "
