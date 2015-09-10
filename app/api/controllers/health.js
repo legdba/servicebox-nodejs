@@ -20,29 +20,23 @@
  */
 'use strict';
 module.exports = {
-  echo: echo,
-  delayedEcho: delayedEcho,
+  health: health,
+  health_conditional: health_conditional
 };
 //var util = require('util');
 var lugg = require('lugg');
-var log = lugg('echo');
+var log = lugg('health');
 
-function echo(req, res) {
-    var message = req.swagger.params.message.value;
-    log.info('echo: %s', message);
-    res.json({message:message});
+function health(req, res) {
+    res.json({message:'up'});
 }
 
-function delayedEcho(req, res) {
-    var message = req.swagger.params.message.value;
-    var delay = req.swagger.params.delay.value;
-    if (delay < 0) {
-        res.status(422).json({message: 'delay must be a positive float'});
+function health_conditional(req, res) {
+    var chance_of_being_up = req.swagger.params.f.value
+    if (chance_of_being_up < 0) chance_of_being_up = 0;
+    if (Math.random() > chance_of_being_up) {
+        return res.status(500).json({message: 'down'});
     } else {
-        log.info('will echo after %sms: %s', delay, message);
-        setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
-            log.info('echo after %sms: %s', delay, message);
-            res.json({message:message});
-        }, delay, req, res);
+        return res.json({message: up});
     }
 }

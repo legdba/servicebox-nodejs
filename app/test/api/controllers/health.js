@@ -18,66 +18,31 @@
  # under the License.
  ##############################################################
  */
-var os = require('os'),
-    should = require('should'),
+var should = require('should'),
     expect = require('chai').expect,
     request = require('supertest'),
     app = require('../../../server');
+var lugg = require('lugg');
+var log = lugg('health');
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('env', function() {
+  describe('health', function() {
 
-    describe('GET /api/v2/env/vars', function() {
+    describe('GET /api/v2/health', function() {
 
-      it('should return current OS environment variables', function(done) {
+      it('should always return "up"', function(done) {
 
         request(app)
-          .get('/api/v2/env/vars')
+          .get('/api/v2/health')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql(process.env);
-            done();
-          });
-      });
-
-    });
-
-    describe('GET /api/v2/env/vars/{name}', function() {
-
-      it('should return {name} current OS environment variable', function(done) {
-
-        request(app)
-          .get('/api/v2/env/vars/PATH')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({PATH: process.env['PATH']});
-            done();
-          });
-      });
-
-    });
-
-    describe('GET /api/v2/env/hostname', function() {
-
-      it('should return {hostname} of current OS environment', function(done) {
-
-        request(app)
-          .get('/api/v2/env/hostname')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({hostname: os.hostname()});
+            res.body.should.eql({message: 'up'});
             done();
           });
       });

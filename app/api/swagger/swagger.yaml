@@ -33,7 +33,7 @@ paths:
         "200":
           description: Success
           schema:
-            type: string
+            $ref: "#/definitions/Message"
         # responses may fall through to errors
         default:
           description: Error
@@ -62,7 +62,7 @@ paths:
         "200":
           description: Success
           schema:
-            type: string
+            $ref: "#/definitions/Message"
         "422":
           description: invalid {delay}
           schema:
@@ -107,7 +107,7 @@ paths:
         "200":
           description: Success
           schema:
-            type: string
+            $ref: "#/definitions/ListOfString"
         "404":
           description: undefined variable
           schema:
@@ -128,7 +128,7 @@ paths:
         "200":
           description: Success
           schema:
-            type: string
+            $ref: "#/definitions/ListOfString"
         # responses may fall through to errors
         default:
           description: Error
@@ -240,12 +240,63 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
+  /health:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: health
+    get:
+      description: Test if service is up and always return a "up" message.
+      # used as the method name of the controller
+      operationId: health
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /health/{f}:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: health
+    get:
+      description: Test if service is up and return a "up" message with a {f} probability and an HTTP error otherwise.
+      # used as the method name of the controller
+      operationId: health_conditional
+      parameters:
+        - name: f
+          in: path
+          description: float number from 0 to 1; with 0 the service will always return an error with 1 it will always return "up"
+          required: true
+          type: number
+          format: float
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        "422":
+          description: invalid {f}
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
 # complex objects have schema definitions
 definitions:
   ListOfString:
     type: object
     additionalProperties:
       type: 'string'
+  Message:
+    required:
+      - message
+    properties:
+      message:
+        type: string
   ErrorResponse:
     required:
       - message

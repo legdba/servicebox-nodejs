@@ -30,16 +30,18 @@ function vars(req, res) {
     var name = req.swagger.params.name.value;
     var value = process.env[name];
     if (value !== undefined) {
-      res.json(value);
+      var json = {};
+      json[name]=value;
+      return res.json(json);
     } else {
-      res.status(404).json({message: 'undefined variable: '+name});
+      return res.status(404).json({message: 'undefined variable: '+name});
     }
   } else {
-    res.json(process.env);
+    return res.json(process.env);
   }
 }
 
 var os = require('os');
 function hostname(req, res) {
-  res.json(os.hostname());
+  res.json({hostname:os.hostname()});
 }

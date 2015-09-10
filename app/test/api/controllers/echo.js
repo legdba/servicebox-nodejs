@@ -40,7 +40,7 @@ describe('controllers', function() {
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql("foo");
+            res.body.should.eql({message:'foo'});
             done();
           });
       });
@@ -58,7 +58,7 @@ describe('controllers', function() {
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql("foo");
+            res.body.should.eql({message:'foo'});
             done();
           });
       });
