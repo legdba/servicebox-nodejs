@@ -61,6 +61,7 @@ function sum(req, res) {
     }
     backend.addAndGet(id, n, function(err, new_counter) {
         if (err) { throw err; }
+        log.info('new sum for id %d is %d', id, new_counter);
         res.json({id:id, value:new_counter});
     });
 }
