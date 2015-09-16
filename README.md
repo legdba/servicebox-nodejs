@@ -31,9 +31,9 @@ docker run -ti -p :8080:8080 --rm=true quay.io/legdba/servicebox-nodejs:latest -
 ```
 Swagger API documentation available on http://your_container_ip:8080/swagger
 
-Note that in the docker registry each image is tagged with the git revision and commit of the code
-used to generate the image. If you run quay.io/legdba/servicebox-nodejs:r23-7be1d82 this is the revision 'r23'
-and commit '7be1d82'. The associated code can be seen at https://github.com/legdba/servicebox-nodejs/commit/7be1d82
+Note that in the docker registry each image is tagged with the git revision, commit and branch of the code
+used to generate the image. If you run quay.io/legdba/servicebox-nodejs:r23-7be1d82-master this is the revision 'r23'
+and commit '7be1d82' on branch 'master'. The associated code can be seen at https://github.com/legdba/servicebox-nodejs/commit/7be1d82
 or with a 'git 7be1d82' command when in the servicebox-nodejs repo.
 
 # License
