@@ -228,23 +228,18 @@ echo "=== collecting facts ==="
 APP_REVISION=$(git rev-list --count HEAD)
 APP_HASH=$(git rev-parse --short HEAD)
 APP_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ "${APP_BRANCH}" == "master" ]; then
-    APP_BRANCH=""
-else
-    APP_BRANCH="-${APP_BRANCH}"
-fi
 APP_NAME=$(basename `git rev-parse --show-toplevel`)
-APP_VERSION="r${APP_REVISION}-${APP_HASH}${APP_BRANCH}"
+APP_VERSION="r${APP_REVISION}-${APP_HASH}-${APP_BRANCH}"
 APP_FULLNAME="${APP_NAME}-${APP_VERSION}"
 ARTIFACT="${APP_FULLNAME}"
 
 echo
-echo "APP_NAME                   = ${APP_NAME}"
-echo "APP_VERSION                = ${APP_VERSION}"
-echo "APP_FULLNAME               = ${APP_FULLNAME}"
-echo "APP_BRANCH (empty==master) = ${APP_BRANCH}"
-echo "ARTIFACT                   = ${ARTIFACT}"
-echo "ARTIFACTS_PATH             = ${ARTIFACTS_PATH}"
+echo "APP_NAME        = ${APP_NAME}"
+echo "APP_VERSION     = ${APP_VERSION}"
+echo "APP_FULLNAME    = ${APP_FULLNAME}"
+echo "APP_BRANCH      = ${APP_BRANCH}"
+echo "ARTIFACT        = ${ARTIFACT}"
+echo "ARTIFACTS_PATH  = ${ARTIFACTS_PATH}"
 
 ###############################################################################
 # Generate archive
@@ -312,16 +307,16 @@ then
     DOCKER_IMAGE_LABEL="${DOCKER_IMAGE_NAME}:${APP_VERSION}"
     exe "docker tag -f ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_LABEL}"
     exe "docker push ${DOCKER_IMAGE_LABEL}"
+
+    # Push an image with a label set to the branch name (the latest for this branch)
+    DOCKER_IMAGE_LABEL="${DOCKER_IMAGE_NAME}:${APP_BRANCH}"
+    exe "docker tag -f ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_LABEL}"
+    exe "docker push ${DOCKER_IMAGE_LABEL}"
     
     if [ "${APP_BRANCH}" == "master" ]
     then
-        # If we are on master push and image with label 'latest'
+        # If we are on master push image with label 'latest' in addition to other labels
         DOCKER_IMAGE_LABEL="${DOCKER_IMAGE_NAME}:latest"
-        exe "docker tag -f ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_LABEL}"
-        exe "docker push ${DOCKER_IMAGE_LABEL}"
-    else
-        # If we are NOT master push and image with label set to the branch name
-        DOCKER_IMAGE_LABEL="${DOCKER_IMAGE_NAME}:${APP_BRANCH}"
         exe "docker tag -f ${DOCKER_IMAGE_NAME} ${DOCKER_IMAGE_LABEL}"
         exe "docker push ${DOCKER_IMAGE_LABEL}"
     fi
