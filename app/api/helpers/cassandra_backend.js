@@ -31,17 +31,38 @@ exports.CassandraBackend = CassandraBackend;
 
 CassandraBackend.prototype.constructor = function() {};
 
+/**
+ * Connect Cassandra backend.
+ * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
+ */
 CassandraBackend.prototype.init = function init(contactPoints, callback) {
     contactPoints = contactPoints || {contactPoints: ['localhost:9042']};
-    this.client = new cassandra.Client(contactPoints);
-    this.client.connect(function (err) {
-        if(callback) { callback(err); }
-        else if (err) { throw err; }
+    log.info('contacting Cassandra cluster at %s', contactPoints);
+    var self=this;
+    self.client = new cassandra.Client(contactPoints);
+    self.client.connect(function connectCassandraCallback(err) {
+        if(err) {
+            self.client.shutdown();
+            callback(err);
+        } else {
+            // Run a stupid request to ensure everything is fine
+            CassandraBackend.prototype.addAndGet.apply(self, [0, 0, function checkCassandraCallback(err, new_counter) {
+                if(err) {
+                    log.warn("Cassandra check failed; maybe Keyspace does not exist. If so run the following command: CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false ; CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id)) ;");
+                    self.client.shutdown();
+                    callback(err);
+                } else {
+                    log.info("Cassandra check succeeded");
+                    callback(null);
+                }
+            }]);
+        }
     });
 };
 
 /**
- * @param callback Executes callback(err, new_counter)
+ * Add 'number' to counter 'id' and return the new value in callback.
+ * @param callback Executes callback(err, new_counter) with err set upon error and with new counter upon success
  */
 CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
     var q = util.format("UPDATE calc.sum SET sum=sum+%s WHERE id='%s'", number, id);
@@ -49,25 +70,23 @@ CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) 
     log.debug('CQL query:', q);
     self.client.execute(q, function (err, results) {
        if (err) {
-           if (callback) { callback(err); }
-           else { throw err; }
+           callback(err);
        } else {
            log.debug('CQL result(s):', results);
-       }
-
-       if(callback) {
            var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
            log.debug('CQL query:', q);
-           self.client.execute(q, function (err, results) {
+           self.client.execute(q, function cqslExecCallback(err, results) {
                if (err) {
-                   if (callback) { callback(err); }
-                   else { throw err; }
+                   callback(err);
                } else {
                    log.debug('CQL result(s):', results);
-                   if (callback) { callback( null, parseInt(results.rows[0].sum) ); }
+                   if ( !results || !results.rows[0] ) {
+                       callback( new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id) );
+                   } else {
+                       callback( null, parseInt(results.rows[0].sum) );
+                   }
                }
            });
        }
-       else if (err) { throw err; }
     });
 };

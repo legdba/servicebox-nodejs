@@ -28,7 +28,7 @@ var express = require('express');
 var app = express();
 module.exports = app; // for testing
 
-var build_be = function(type) {
+var build_be = function build_backend(type) {
     switch (type) {
         case 'memory':
             return require('./api/helpers/memory_backend').MemoryBackend();
@@ -39,7 +39,7 @@ var build_be = function(type) {
     }
 };
 
-var start = function(config) {
+var start = function start_server(config) {
     // Default config
     var def = {port:8080, loglevel:'warn', backendType:'memory', backendOpts:{} };
     config = config || def;
@@ -58,41 +58,48 @@ var start = function(config) {
     // Ensure async exception in callbacks get cautch and properly logged
     var d = require('domain').create();
     d.on('error', function(err) {
-        log.error(err);
+        log.error(err, "unhandled exception");
+        process.exit(2);
     });
     
     d.run(function() {
-        // Set Backend
         var backend = build_be(backendType);
-        backend.init(backendOpts, function(err) {
-            if (err) { throw err; }
-            else { log.info('connected to Backend'); }
-
-            app.use(function(req, res, next){
-                req.locals = {
-                    backend: backend
-                };
-                next();
-            });
-
-            // Init swagger and express
-            var SwaggerExpress = require('swagger-express-mw');
-
-            var express_config = {
-                appRoot: __dirname // required config
-            };
-
-            SwaggerExpress.create(express_config, function(err, swaggerExpress) {
-                if (err) { throw err; }
-
-                // install middleware
-                swaggerExpress.register(app);
-
-                // start server
-                app.listen(port, function() {
-                    log.warn('server listening on port %d in %s mode', port, app.settings.env);
+        
+        backend.init(backendOpts, function init_backend_callback(err) {
+            if (err) {
+                log.error(err, "failed to init backend: %s", err);
+                process.exit(2);
+            } else {
+                // Ensure the backend instance will be in the context of all requests
+                app.use(function(req, res, next){
+                    req.locals = {
+                        backend: backend
+                    };
+                    next();
                 });
-            });
+            
+                // Init swagger and express
+                var SwaggerExpress = require('swagger-express-mw');
+
+                var express_config = {
+                    appRoot: __dirname // required config
+                };
+            
+                SwaggerExpress.create(express_config, function init_swagger_callback(err, swaggerExpress) {
+                    if (err) {
+                        log.error(err, "failed to init swagger");
+                        process.exit(2);
+                    } else {
+                        // install middleware
+                        swaggerExpress.register(app);
+
+                        // start server
+                        app.listen(port, function app_listen_callback() {
+                            log.warn('server listening on port %d in %s mode', port, app.settings.env);
+                        });
+                    }
+                });
+            }
         });
     });
     return app; // for testing purpose
@@ -101,11 +108,12 @@ exports.start = start;
 
 if(require.main === module) {
     // Read CLI args
+    var CRWS="\n                            ";
     var opt = require('node-getopt').create([
         ['p' , 'port=PORT'           , 'http server port; default=8080'],
         ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra); default=memory'],
-        ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type; with cassandra this is a contactPoints string'],
+        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra); default=memory'+CRWS+'  memory:'+CRWS+'    Use local memory as a backend; application is then statefull and'+CRWS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRWS+'  cassandra'+CRWS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
+        ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type.'+CRWS+'  memory:'+CRWS+'    ignore any --be-opts value.'+CRWS+'  cassandra:'+CRWS+'    contactPoints string as per https://github.com/datastax/java-driver;'+CRWS+'    example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
         ['h' , 'help'                , 'display this help'],
     ])
     .bindHelp()

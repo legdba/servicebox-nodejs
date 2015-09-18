@@ -59,9 +59,13 @@ function sum(req, res) {
         res.status(500).json({message: 'backend is null'});
         return;
     }
-    backend.addAndGet(id, n, function(err, new_counter) {
-        if (err) { throw err; }
-        log.info('new sum for id %d is %d', id, new_counter);
-        res.json({id:id, value:new_counter});
+    backend.addAndGet(id, n, function addAndGetCallback(err, new_counter) {
+        if (err) {
+            log.error(err, 'failed to increase counter %s by %d : %s', id, n, err);
+            res.status(502).json({message:'backend error: ' + err});
+        } else {
+            log.info('new sum for id %d is %d', id, new_counter);
+            res.json({id:id, value:new_counter});
+        }
     });
 }

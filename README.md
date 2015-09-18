@@ -36,6 +36,19 @@ used to generate the image. If you run quay.io/legdba/servicebox-nodejs:r23-7be1
 and commit '7be1d82' on branch 'master'. The associated code can be seen at https://github.com/legdba/servicebox-nodejs/commit/7be1d82
 or with a 'git 7be1d82' command when in the servicebox-nodejs repo.
 
+## Using a Backend
+
+### Memory
+This is the default. No configuration needed.
+
+### Cassandra
+To use cassandra as a backend add the following options:
+```
+--be-type=cassandra --be-opts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
+```
+Obviously use your own node IPs or names.
+The --be-opts support any JSON string configuration supported by Cassandra JavaScript media driver (see https://github.com/datastax/java-driver).
+
 # License
 This software is under Apache 2.0 license.
 ```

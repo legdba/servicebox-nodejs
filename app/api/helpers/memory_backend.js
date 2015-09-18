@@ -31,7 +31,7 @@ MemoryBackend.prototype.constructor = function() {};
 
 MemoryBackend.prototype.init = function init(contactPoints, callback) {
     this.counters = {};
-    if(callback) { callback(null); }
+    callback(null);
 };
 
 /**

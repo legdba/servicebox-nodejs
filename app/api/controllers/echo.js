@@ -40,7 +40,7 @@ function delayedEcho(req, res) {
         res.status(422).json({message: 'delay must be a positive float'});
     } else {
         log.info('will echo after %sms: %s', delay, message);
-        setTimeout(function(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
+        setTimeout(function timeoutCallback(req, res) { // see https://github.com/jmar777/suspend for a promise-based approach
             log.info('echo after %sms: %s', delay, message);
             res.json({message:message});
         }, delay, req, res);
