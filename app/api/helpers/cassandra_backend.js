@@ -35,11 +35,22 @@ CassandraBackend.prototype.constructor = function() {};
  * Connect Cassandra backend.
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
  */
-CassandraBackend.prototype.init = function init(contactPoints, callback) {
-    contactPoints = contactPoints || {contactPoints: ['localhost:9042']};
-    log.info('contacting Cassandra cluster at %s', contactPoints);
+CassandraBackend.prototype.init = function init(cfg, callback) {
+    
+    cfg = cfg || {contactPoints: ['localhost:9042']};
+    if (cfg['authProvider']) {
+        switch (cfg.authProvider.type) {
+        case 'PlainTextAuthProvider':
+            cfg.authProvider = new cassandra.auth.PlainTextAuthProvider(cfg.authProvider.username, cfg.authProvider.password);
+            break;
+        default:
+            throw new Error("invalid cassandra authProvider: " + cfg.authProvider.type);
+        }
+    }
+    //cfg.authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+    log.info('contacting Cassandra cluster at %j', cfg);
     var self=this;
-    self.client = new cassandra.Client(contactPoints);
+    self.client = new cassandra.Client(cfg);
     self.client.connect(function connectCassandraCallback(err) {
         if(err) {
             self.client.shutdown();

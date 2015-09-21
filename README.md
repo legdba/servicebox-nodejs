@@ -46,8 +46,10 @@ To use cassandra as a backend add the following options:
 ```
 --be-type=cassandra --be-opts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
 ```
-Obviously use your own node IPs or names.
-The --be-opts support any JSON string configuration supported by Cassandra JavaScript media driver (see https://github.com/datastax/java-driver).
+Plain-text credentials can be set this way (no other credentials supported so far):
+```
+--be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "authProvider":{"type":"PlainTextAuthProvider", "username":"username", "password":"p@ssword"}}'
+```
 
 # License
 This software is under Apache 2.0 license.
