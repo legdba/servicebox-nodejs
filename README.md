@@ -50,6 +50,49 @@ Plain-text credentials can be set this way (no other credentials supported so fa
 ```
 --be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "authProvider":{"type":"PlainTextAuthProvider", "username":"username", "password":"p@ssword"}}'
 ```
+Set load balancing policies:
+```
+--be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
+```
+
+# Exposed services
+
+Get Swagger definition at http://yourhost:8080/api/v2/swagger.yaml
+Get Swagger-UI at http://yourhost:8080/docs/ (mind the final '/').
+
+### GET /api/v2/health
+Returns "{message:'up'}".
+
+###GET /api/v2/health/{percentage}
+Returns "{message:'up'}" with {percentage} chance, or fail with an exception. {percentage} is a float number between 0 and 1.
+Usefull for health-checking scripts testing.
+
+###GET /api/v2/echo/{something}
+Returns "{message:'something'}".
+
+###GET /api/v2/echo/{something}/{delayms}
+Returns "{message:'something'}" after a {delayms} wait time.
+
+###GET /api/v2/calc/sum/{id}/{value}
+Add {value} to the accumulator in backend at ID {id} and return accumulated value. The backend is by default the Java instance memory but can be configured to be a Cassandra cluster by setting up the "--be-type cassandra --be-opts node_ip" (as of today only one Cassandra node can be set).
+
+###GET /api/v2/calc/fibo-nth/{n}
+Calculate [n]th term of fibonnaci; this is rather CPU intensive with n > 50.
+
+###GET /api/v2/leak/{size}
+Leaks {size} bytes of data on Java heap and returns with a status of leaked and total leaked heap.
+
+###GET /api/v2/leak/free
+Frees all retained references causing the leak. Nex GC or Full-GC can reclaim associated heap.
+
+###GET /api/v2/env/vars
+Returns all system environment variables in a JSON map.
+
+###GET /api/v2/env/vars/{name}
+Return the value of the system environment variable {name}.
+
+###GET /api/v2/env/hostname
+Return the value InetAddress.getLocalHost().getHostName() which is usually good enough as a hostname.
 
 # License
 This software is under Apache 2.0 license.

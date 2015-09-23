@@ -35,22 +35,37 @@ CassandraBackend.prototype.constructor = function() {};
  * Connect Cassandra backend.
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
  */
-CassandraBackend.prototype.init = function init(cfg, callback) {
+CassandraBackend.prototype.init = function init(jsoncfg, callback) {
     
-    cfg = cfg || {contactPoints: ['localhost:9042']};
-    if (cfg['authProvider']) {
-        switch (cfg.authProvider.type) {
+    jsoncfg = jsoncfg || {contactPoints: ['localhost:9042']};
+    var config = {};
+    
+    config.contactPoints = jsoncfg.contactPoints;
+    
+    if (jsoncfg.authProvider) {
+        switch (jsoncfg.authProvider.type) {
         case 'PlainTextAuthProvider':
-            cfg.authProvider = new cassandra.auth.PlainTextAuthProvider(cfg.authProvider.username, cfg.authProvider.password);
+            config.authProvider = new cassandra.auth.PlainTextAuthProvider(jsoncfg.authProvider.username, jsoncfg.authProvider.password);
             break;
         default:
-            throw new Error("invalid cassandra authProvider: " + cfg.authProvider.type);
+            throw new Error("invalid cassandra authProvider: " + jsoncfg.authProvider.type);
+        }
+    }
+    
+    if (jsoncfg.loadBalancingPolicy) {
+        switch(jsoncfg.loadBalancingPolicy.type) {
+        case 'DCAwareRoundRobinPolicy':
+            if ( ! config.policies ) { config.policies = {}; }
+            config.policies.loadBalancing = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(jsoncfg.loadBalancingPolicy.localDC);
+            break;
+        default:
+            throw new Error("invalid cassandra loadBalancingPolicy: " + jsoncfg.loadBalancingPolicy.type);
         }
     }
     //cfg.authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
-    log.info('contacting Cassandra cluster at %j', cfg);
+    log.info('contacting Cassandra cluster at %j', config);
     var self=this;
-    self.client = new cassandra.Client(cfg);
+    self.client = new cassandra.Client(config);
     self.client.connect(function connectCassandraCallback(err) {
         if(err) {
             self.client.shutdown();
