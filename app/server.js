@@ -34,6 +34,8 @@ var build_be = function build_backend(type) {
             return require('./api/helpers/memory_backend').MemoryBackend();
         case 'cassandra':
             return require('./api/helpers/cassandra_backend').CassandraBackend();
+        case 'redis-cluster':
+            return require('./api/helpers/rediscluster_backend').RedisClusterBackend();
         default:
             throw new Error("invalid backend type: " + type);
     }

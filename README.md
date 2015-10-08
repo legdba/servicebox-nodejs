@@ -55,6 +55,15 @@ Set load balancing policies:
 --be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
 ```
 
+### Redis-cluster
+To use a redis cluster as a backend add the following options:
+```
+--be-type=redis-cluster --be-opts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
+```
+Only redis v3 cluster is supported as of today. Plain old redis instances are not supported.
+
+Note that the redis cluster client will try to connect to the cluster until it succeeds.
+
 # Exposed services
 
 Get Swagger definition at http://yourhost:8080/api/v2/swagger.yaml
@@ -93,6 +102,12 @@ Return the value of the system environment variable {name}.
 
 ###GET /api/v2/env/hostname
 Return the value InetAddress.getLocalHost().getHostName() which is usually good enough as a hostname.
+
+# TODO
+* Implement Logstash log format
+* Add txn logs
+* Add POST support for echo service
+* Add support for Cassandra cluster options (same as in Java)
 
 # License
 This software is under Apache 2.0 license.

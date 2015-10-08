@@ -96,20 +96,20 @@ CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) 
     log.debug('CQL query:', q);
     self.client.execute(q, function (err, results) {
        if (err) {
-           callback(err);
+           if (callback) callback(err);
        } else {
            log.debug('CQL result(s):', results);
            var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
            log.debug('CQL query:', q);
            self.client.execute(q, function cqslExecCallback(err, results) {
                if (err) {
-                   callback(err);
+                   if (callback) callback(err);
                } else {
                    log.debug('CQL result(s):', results);
                    if ( !results || !results.rows[0] ) {
-                       callback( new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id) );
+                       if (callback) callback( new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id) );
                    } else {
-                       callback( null, parseInt(results.rows[0].sum) );
+                       if (callback) callback( null, parseInt(results.rows[0].sum) );
                    }
                }
            });
