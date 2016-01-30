@@ -56,17 +56,17 @@ var start = function start_server(config) {
 
     log.debug('DEBUG enabled');
     log.info('INFO enabled');
-    
+
     // Ensure async exception in callbacks get cautch and properly logged
     var d = require('domain').create();
     d.on('error', function(err) {
         log.error(err, "unhandled exception");
         process.exit(2);
     });
-    
+
     d.run(function() {
         var backend = build_be(backendType);
-        
+
         backend.init(backendOpts, function init_backend_callback(err) {
             if (err) {
                 log.error(err, "failed to init backend: %s", err);
@@ -79,14 +79,14 @@ var start = function start_server(config) {
                     };
                     next();
                 });
-            
+
                 // Init swagger and express
                 var SwaggerExpress = require('swagger-express-mw');
 
                 var express_config = {
                     appRoot: __dirname // required config
                 };
-            
+
                 SwaggerExpress.create(express_config, function init_swagger_callback(err, swaggerExpress) {
                     if (err) {
                         log.error(err, "failed to init swagger");
@@ -110,12 +110,12 @@ exports.start = start;
 
 if(require.main === module) {
     // Read CLI args
-    var CRWS="\n                            ";
+    var CRLS="\n                            ";
     var opt = require('node-getopt').create([
         ['p' , 'port=PORT'           , 'http server port; default=8080'],
         ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra); default=memory'+CRWS+'  memory:'+CRWS+'    Use local memory as a backend; application is then statefull and'+CRWS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRWS+'  cassandra'+CRWS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
-        ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type.'+CRWS+'  memory:'+CRWS+'    ignore any --be-opts value.'+CRWS+'  cassandra:'+CRWS+'    contactPoints string as per https://github.com/datastax/java-driver;'+CRWS+'    example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
+        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra); default=memory'+CRLS+'  memory:'+CRLS+'    Use local memory as a backend; application is then statefull and'+CRLS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
+        ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type.'+CRLS+'  memory:'+CRLS+'    ignore any --be-opts value.'+CRLS+'  cassandra:'+CRLS+'    contactPoints string as per https://github.com/datastax/java-driver;'+CRLS+'    example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
         ['h' , 'help'                , 'display this help'],
     ])
     .bindHelp()
