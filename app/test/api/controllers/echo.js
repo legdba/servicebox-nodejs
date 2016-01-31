@@ -29,6 +29,25 @@ describe('controllers', function() {
 
   describe('echo', function() {
 
+    describe('POST /api/v2/echo', function() {
+
+      it('should echo passed Message body', function(done) {
+
+        request(app)
+          .post('/api/v2/echo')
+          .set('Accept', 'application/json')
+          .type('json')
+          .send('{"message":"foo"}')
+          .expect(200)
+          .end(function(err, res) {
+            should.not.exist(err);
+            res.body.should.eql({message:'foo'});
+            done();
+          });
+      });
+
+    });
+
     describe('GET /api/v2/echo/{message}', function() {
 
       it('should echo passed {message}', function(done) {

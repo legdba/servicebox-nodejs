@@ -20,17 +20,24 @@
  */
 'use strict';
 module.exports = {
-  echo: echo,
+  echo_post: echo_post,
+  echo_get: echo_get,
   delayedEcho: delayedEcho,
 };
 //var util = require('util');
 var lugg = require('lugg');
 var log = lugg('echo');
 
-function echo(req, res) {
+function echo_get(req, res) {
     var message = req.swagger.params.message.value;
     log.info('echo: %s', message);
     res.json({message:message});
+}
+
+function echo_post(req, res) {
+    var message = req.swagger.params.message.value;
+    log.info('echo: %s', message);
+    res.json(message);
 }
 
 function delayedEcho(req, res) {

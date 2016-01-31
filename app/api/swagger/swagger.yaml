@@ -16,13 +16,37 @@ consumes:
 produces:
   - application/json
 paths:
+  /echo:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: echo
+    post:
+      description: Returns it's own message to the caller
+      # used as the method name of the controller
+      operationId: echo_post
+      parameters:
+        - name: message
+          in: body
+          description: The message to return back
+          required: true
+          schema:
+            $ref: "#/definitions/Message"
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
   /echo/{message}:
     # binds a127 app logic to a route
     x-swagger-router-controller: echo
     get:
       description: Returns it's own message to the caller
       # used as the method name of the controller
-      operationId: echo
+      operationId: echo_get
       parameters:
         - name: message
           in: path
