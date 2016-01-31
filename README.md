@@ -70,7 +70,6 @@ Get Swagger definition at http://yourhost:8080/api/v2/swagger (this will return 
 
 # TODO
 * Add txn logs
-* Add POST support for echo service
 * Add support for Cassandra cluster options (same as in Java)
 
 # License
