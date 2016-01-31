@@ -106,7 +106,6 @@ Return the value InetAddress.getLocalHost().getHostName() which is usually good 
 # TODO
 * Implement Logstash log format
 * Add txn logs
-* Add POST support for echo service
 * Add support for Cassandra cluster options (same as in Java)
 
 # License
