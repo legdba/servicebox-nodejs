@@ -21,6 +21,7 @@
 'use strict';
 module.exports = {
   vars: vars,
+  var: vars,
   hostname: hostname
 };
 //var util = require('util');

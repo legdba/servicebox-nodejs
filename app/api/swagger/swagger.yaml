@@ -2,9 +2,9 @@ swagger: "2.0"
 info:
   version: "2.0"
   title: Servicebox NodeJS
-# basePath prefixes all resource paths 
+# basePath prefixes all resource paths
 basePath: /api/v2
-# 
+#
 schemes:
   # tip: remove http to make production-grade
   - http
@@ -96,7 +96,7 @@ paths:
     get:
       description: Returns {name} server OS environment variable
       # used as the method name of the controller
-      operationId: vars
+      operationId: var
       parameters:
         - name: name
           in: path
