@@ -23,75 +23,76 @@
 var makeClass = require('./make_class');
 var util = require('util');
 var lugg = require('lugg');
-var log = lugg('rediscluster-clt');
+var log = lugg('redissentinel-clt');
 var Redis = require('ioredis');
 
-var RedisClusterBackend = makeClass.makeClass();
-exports.RedisClusterBackend = RedisClusterBackend;
+var RedisSentinelBackend = makeClass.makeClass();
+exports.RedisSentinelBackend = RedisSentinelBackend;
 
-RedisClusterBackend.prototype.constructor = function() {};
+RedisSentinelBackend.prototype.constructor = function() {};
 
 /**
- * Connect Redis cluster backend.
+ * Connect Redis Sentinel group.
  * @param jsoncfg contains the ioredis connection string in the "driver-config"
  * param (could contain other non-ioredis params later on).
  * Example:
  * {
- *   "driver-config":
- *     [
- *       { "host":"1.2.3.4", "port":"6379"},
- *       { "host":"2.3.4.5", "port":"6379"},
- *       { "host":"3.4.5.6", "port":"6379"}
- *     ]
+ *   "driver-config": {
+ *     sentinels: [
+ *       {host: '104.131.130.202', port:26379},
+ *       {host: '104.236.144.145', port:26379},
+ *       {host: '104.236.145.222', port:26379},
+ *     ],
+ *     name: 'mymaster'
+ *   };
  * }
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
- * The RedisClusterBackend is ready to be used as soon as the calllback has been called with a success.
+ * The RedisSentinelBackend is ready to be used as soon as the calllback has been called with a success.
  */
-RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
+RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
     var self = this;
     var cfg = jsoncfg.drivercfg;
 
     // NOTE regarding ioredis behavior:
-    // By default ioredis will try to connect to the cluster forever, suspending any ongoing request
-    // till the cluster is back online. This is annoying since it cause huge delay for the client without
+    // By default ioredis will try to connect to the group forever, suspending any ongoing request
+    // till the group is back online. This is annoying since it cause huge delay for the client without
     // any wait to control it.
-    // The implementation below is forcing enableOfflineQueue:false. This means that if the cluster is offline
+    // The implementation below is forcing enableOfflineQueue:false. This means that if the group is offline
     // any request will fail immediatly without retry which sounds better.
-    // TODO: test if this cause errors upon a single master node failure.
     log.info("ioredis connecting to " + JSON.stringify(cfg));
-    self.cluster = new Redis.Cluster(cfg, {enableOfflineQueue:false});
+    self.redis = new Redis(cfg, {enableOfflineQueue:false});
 
     var redisInitErrorCallback = function redisInitCallback(err) {
         callback(err);
     };
 
-    self.cluster
+    self.redis
     .once('error', redisInitErrorCallback)
     .once('ready', function redisInitReadyCallback(stream) {
-        // Remove existing event handler and setup new ones to logs cluster state changes
+        // Remove existing event handler and setup new ones to logs redis state changes
         // (we don't want the .once('error',...) event handler below to do a callback later on upon error
         //  while we have already setup the backend connection once and did a callback)
-        self.cluster.removeListener('error', redisInitErrorCallback);
-        self.cluster.on('error', function redisErrorCallback(err) {
-            log.warn('redis-cluster error: %s', err);
+        self.redis.removeListener('error', redisInitErrorCallback);
+        self.redis.on('error', function redisErrorCallback(err) {
+            log.warn('redis error: %s', err);
         }).on('connect', function redisConnectCallback(stream) {
-            log.warn('redis-cluster connected: %s', stream);
+            log.warn('redis connected: %s', stream);
         }).on('reconnecting', function redisReconnectingCallback() {
-            log.warn('redis-cluster reconnecting');
+            log.warn('redis reconnecting');
         }).on('end', function redisEndCallback() {
-            log.warn('redis-cluster ended');
+            log.warn('redis ended');
         }).on('drain', function redisDrainCallback() {
-            log.warn('redis-cluster drained');
+            log.warn('redis drained');
         }).on('idle', function redisIdleCallback() {
-            log.warn('redis-cluster idle: %s');
+            log.warn('redis idle: %s');
         });
-        // Test cluster
+        // Test Redis
         log.info('testing backend with a sum(\'0\', 0) request...')
         self.addAndGet('0', 0, function incrCallback(err, result) {
             if (err) callback(err);
             log.info("counter: " + result);
             log.info('backend test passed');
-            callback(null); // cluster is up and running, init() is done
+            callback(null); // Redis is up and running, init() is done
         });
     });
 };
@@ -100,8 +101,8 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
  * Add 'number' to counter 'id' and return the new value in callback.
  * @param callback Executes callback(err, new_counter) with err set upon error and with new_counter upon success
  */
-RedisClusterBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
-    this.cluster.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
+RedisSentinelBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
+    this.redis.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
         if (err) {
             if (callback) callback(err);
         } else {

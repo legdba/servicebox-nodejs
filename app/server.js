@@ -36,6 +36,8 @@ var build_be = function build_backend(type) {
             return require('./api/helpers/cassandra_backend').CassandraBackend();
         case 'redis-cluster':
             return require('./api/helpers/rediscluster_backend').RedisClusterBackend();
+        case 'redis-sentinel':
+            return require('./api/helpers/redissentinel_backend').RedisSentinelBackend();
         default:
             throw new Error("invalid backend type: " + type);
     }
@@ -114,7 +116,7 @@ if(require.main === module) {
     var opt = require('node-getopt').create([
         ['p' , 'port=PORT'           , 'http server port; default=8080'],
         ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra); default=memory'+CRLS+'  memory:'+CRLS+'    Use local memory as a backend; application is then statefull and'+CRLS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
+        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra|redis-cluster|redis-sentinel); default=memory'+CRLS+'  memory:'+CRLS+'    Use local memory as a backend; application is then statefull and'+CRLS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
         ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type.'+CRLS+'  memory:'+CRLS+'    ignore any --be-opts value.'+CRLS+'  cassandra:'+CRLS+'    contactPoints string as per https://github.com/datastax/java-driver;'+CRLS+'    example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
         ['h' , 'help'                , 'display this help'],
     ])
@@ -125,6 +127,8 @@ if(require.main === module) {
     if (!opt.options['be-type']) { opt.options['be-type']='memory'; }
     if (opt.options['be-type'] === 'cassandra' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}'; }
     if (opt.options['be-type'] === 'memory') { opt.options['be-opts'] = "{}"; }
+    if (opt.options['be-type'] === 'redis-cluster' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"drivercfg":[{"host":"localhost","port":"6379"}]}'; }
+    if (opt.options['be-type'] === 'redis-sentinel' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"drivercfg":{sentinels:[{host:"localhost", port:26379"}], "name":"mymaster"}}'; }
     //console.info(opt);
 
     start({

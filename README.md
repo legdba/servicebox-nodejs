@@ -58,11 +58,30 @@ Set load balancing policies:
 ### Redis-cluster
 To use a redis cluster as a backend add the following options:
 ```
---be-type=redis-cluster --be-opts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
+--be-type=redis-cluster --be-opts='{"drivercfg":[{"host":"localhost","port":"6379"}]}'
 ```
-Only redis v3 cluster is supported as of today. Plain old redis instances are not supported.
+
+The "drivercfg" JSON param is the IORedis client JSON connection object.
+Any IORedis config is supported. This is basically a list of of the cluster nodes
+to connect to in order to discover the cluster topology. A single node can be
+configured and this enough, but to improve reliability it is advised to configure
+three (3) nodes.
 
 Note that the redis cluster client will try to connect to the cluster until it succeeds.
+
+### Redis-sentinel
+To use a redis with sentinels as a backend add the following options:
+```
+--be-type=redis-sentinel --be-opts='{"drivercfg":{ "sentinels": [ {"host": "104.131.130.202", "port":26379}, {"host": "104.236.144.145", "port":26379}, {"host": "104.236.145.222", "port":26379} ], "name": "mymaster" }}'
+```
+
+The "drivercfg" JSON param is the IORedis client JSON connection object.
+Any IORedis config is supported. This is basically a list of the sentinels to
+connect to in order to discover the whole list of sentinels, masters and slaves.
+While a single sentinel can be configured it is advised to configure 3 sentinels
+to improve reliability.
+
+Note that the redis client will try to connect to the groups until it succeeds.
 
 # Exposed services
 
