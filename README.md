@@ -5,6 +5,108 @@
 # Overview
 HTTP REST services for infra/containers testing: echo, leaks, CPU-intensive ops, backend usage, etc.
 
+# Exposed REST Services
+
+See full Swagger definition and sample CURL commands at http://yourhost:8080/api/v2/swagger.yaml
+See Swagger-UI at http://yourhost:8080/docs/ (mind the final '/').
+
+## GET /api/v2/echo/{message} or POST /api/v2/echo
+Return back message.
+
+Sample requests (both GET and POST)
+```
+curl -i -H 'Accept: application/json' http://192.168.59.103:8080/api/v2/echo/hello
+curl -X POST  -H "Accept: Application/json" -H "Content-Type: application/json" http://localhost:8080/api/v2/echo -d '{"message":"hello"}'
+```
+
+## GET /api/v2/echo/{message}/{delay}
+Return back message after {delayms} milliseconds
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/echo/hello/1000
+```
+
+## GET /api/v2/env/vars
+Display REST server environment.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/env/vars
+```
+
+## GET /api/v2/env/vars/{name}
+Return the server ENV value for variable {name}.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/env/vars/HOME
+```
+
+## GET /api/v2/env/hostname
+Return the server hostname.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/env/hostname
+```
+
+## GET /api/v2/env/pid
+Return the REST server process ID (PID).
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/env/pid
+```
+
+## GET /api/v2/health
+Health check service.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/health
+```
+
+## GET /api/v2/health/{percentage}
+Return a 'up' message {percentage}% time and an HTTP error 503 otherwise. The {percentage} is a float from 0 (0%) to 1 (100%).
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/health/0.5
+```
+
+## GET /api/v2/leak/{size}
+Leak {size} bytes of memory.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/leak/1024
+```
+
+## GET /api/v2/leak/free
+Free all memory leaked by calls to /api/v2/leak/{size}.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/leak/free
+```
+
+## GET /api/v2/calc/sum/{id}/{value}
+Sum {value} to {id} counter in and return the new value. The data is stored in the instance memory by defaul( statefull) and can be set to Cassandra or Redis to emulate a stateless 12-factor behavior.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/calc/sum/0/1
+```
+
+## GET /api/v2/calc/fibo-nth/{n}
+Compute the n-th term of fibonacci", notes = "Compute the n-th term of fibonacci which is CPU intensive, expecially if {n} > 50.
+
+Sample request:
+```
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/calc/fibo-nth/42
+```
+
 # Usage
 The application runs either as a NodeJS application or as a Docker container.
 

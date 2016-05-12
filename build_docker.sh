@@ -23,15 +23,13 @@
 # This script MUST be run from the git repo of the application.
 #
 # Requirements for the application building:
-# - The application shall either be a standard npm application or gradle
-#   uber-jar artifact
+# - The application shall either be a standard npm application or standard
+#   gradle application
 # - NPM requirements:
 #   - Shall have a standar package.json file at the repo root with
 #     - a main property set to the application main JS file
 # - Gradle requirements:
-#   - Shall have gradlew script at the repo root with
-#     - A 'fatJar' target building a single uber jar and outputing the jar name
-#       to stdout with the following format: "fatJar : {filename}"
+#   - Shall have gradlew script at the repo root
 #
 # Requirements for the Dockerfile.in
 # - use the following tokens for substitution with the associated variables:
@@ -97,12 +95,12 @@ function build_archive_via_npm() {
     exe "./build_package.sh --type=npm --app-name=${NAME} --pkg-dir=${DIR}"
 }
 
-# Build archive via Gradle as a fat jar
-function build_archive_via_gradle_fatjar() {
+# Build archive via Gradle as a dist tar
+function build_archive_via_gradle_disttar() {
     echo "detected GRADLE build"
     NAME=$1
     DIR=$2
-    exe "./build_package.sh --type=gradle-fatjar --app-name=${NAME} --pkg-dir=${DIR}"
+    exe "./build_package.sh --type=gradle-disttar --app-name=${NAME} --pkg-dir=${DIR}"
 }
 
 # Help
@@ -173,54 +171,6 @@ then
 fi
 
 ###############################################################################
-# Check required variable
-echo
-echo "=== checking environment ==="
-
-# Get CircleCI auto-env
-if [ ${CIRCLECI} ]
-then
-    ARTIFACTS_PATH=${CIRCLE_ARTIFACTS}
-fi
-
-# Check the env contains the Docker repo to push Docker image to
-# use "quai.io" for quay.io
-# use "hub.docker.com" for default docker hub
-if [ -z "${DOCKER_REPO}" ]
-then
-    echo "please set DOCKER_REPO"
-    exit 1
-fi
-
-# Check the env contains the Docker repo login to push Docker image to
-if [ -z "${DOCKER_REPO_USER}" ]
-then
-    echo "please set DOCKER_REPO_USER"
-    exit 1
-fi
-
-# Check the env contains the Docker repo token to push Docker image to
-if [ -z "${DOCKER_REPO_TOKEN}" ]
-then
-    echo "please set DOCKER_REPO_TOKEN"
-    exit 1
-fi
-
-# Check the env contains the Docker repo user email to push Docker image to
-if [ -z "${DOCKER_REPO_EMAIL}" ]
-then
-    echo "please set DOCKER_REPO_EMAIL"
-    exit 1
-fi
-
-# Check the env contains artifact path (auto set when using CircleCI, see above)
-if [ -z "${ARTIFACTS_PATH}" ]
-then
-    echo "please set ARTIFACTS_PATH"
-    exit 1
-fi
-
-###############################################################################
 # Set all variables
 echo
 echo "=== collecting facts ==="
@@ -232,6 +182,70 @@ APP_NAME=$(basename `git rev-parse --show-toplevel`)
 APP_VERSION="r${APP_REVISION}-${APP_HASH}-${APP_BRANCH}"
 APP_FULLNAME="${APP_NAME}-${APP_VERSION}"
 ARTIFACT="${APP_FULLNAME}"
+
+###############################################################################
+# Check required variable
+echo
+echo "=== checking environment ==="
+
+# Get CircleCI auto-env
+if [ ${CIRCLECI} ]
+then
+    ARTIFACTS_PATH=${CIRCLE_ARTIFACTS}
+fi
+
+if [ $LOCAL == NO ]
+then
+    # Check the env contains the Docker repo to push Docker image to
+    # use "quai.io" for quay.io
+    # use "hub.docker.com" for default docker hub
+    if [ -z "${DOCKER_REPO}" ]
+    then
+        echo "empty DOCKER_REPO, setting it to default 'hub.docker.com'"
+        DOCKER_REPO="hub.docker.com"
+    fi
+    DOCKER_REPO="${DOCKER_REPO}/"
+
+    # Check the env contains the Docker repo login to push Docker image to
+    if [ -z "${DOCKER_REPO_USER}" ]
+    then
+        echo "please set DOCKER_REPO_USER"
+        exit 1
+    fi
+
+    # Check the env contains the Docker repo token to push Docker image to
+    if [ -z "${DOCKER_REPO_TOKEN}" ]
+    then
+        echo "please set DOCKER_REPO_TOKEN"
+        exit 1
+    fi
+
+    # Check the env contains the Docker repo user email to push Docker image to
+    if [ -z "${DOCKER_REPO_EMAIL}" ]
+    then
+        echo "please set DOCKER_REPO_EMAIL"
+        exit 1
+    fi
+fi
+
+# Check the env contains artifact path (auto set when using CircleCI, see above)
+if [ -z "${ARTIFACTS_PATH}" ]
+then
+    if [ $LOCAL == YES ]
+    then
+        ARTIFACTS_PATH="/tmp/${APP_FULLNAME}"
+        exe "mkdir -p ${ARTIFACTS_PATH}"
+        exe "rm -f ${ARTIFACTS_PATH}/*"
+    else
+        echo "please set ARTIFACTS_PATH"
+        exit 1
+    fi
+fi
+
+###############################################################################
+# Echo variables
+echo
+echo "=== variables ==="
 
 echo
 echo "APP_NAME        = ${APP_NAME}"
@@ -248,7 +262,7 @@ echo "=== generating archive ==="
 if [ -f ./package.json ]; then
     build_archive_via_npm ${ARTIFACT} ${ARTIFACTS_PATH}
 elif [ -f ./gradlew ]; then
-    build_archive_via_gradle_fatjar ${ARTIFACT} ${ARTIFACTS_PATH}
+    build_archive_via_gradle_disttar ${ARTIFACT} ${ARTIFACTS_PATH}
 else
     echo "failed to detect build framework" >&2
     exit 2
@@ -290,7 +304,7 @@ then
     echo "\$ docker login --username=${DOCKER_REPO_USER} --password=\${DOCKER_REPO_TOKEN} --email=${DOCKER_REPO_EMAIL} ${DOCKER_REPO}"
     run "docker login --username=${DOCKER_REPO_USER} --password=${DOCKER_REPO_TOKEN} --email=${DOCKER_REPO_EMAIL} ${DOCKER_REPO}"
 fi
-DOCKER_IMAGE_NAME="${DOCKER_REPO}/legdba/${APP_NAME}"
+DOCKER_IMAGE_NAME="${DOCKER_REPO}legdba/${APP_NAME}"
 exe "docker build --pull=true --tag=\"${DOCKER_IMAGE_NAME}\" ."
 exe "docker run -ti -P ${DOCKER_IMAGE_NAME} --help"
 exe "cd -"
@@ -321,3 +335,10 @@ then
         exe "docker push ${DOCKER_IMAGE_LABEL}"
     fi
 fi
+
+###############################################################################
+# Cleanup
+echo
+echo "=== Cleanup ==="
+
+exe "rm -rf ${ARTIFACTS_PATH}/Dockerfile ${ARTIFACTS_PATH}/Dockerfile.in ${ARTIFACTS_PATH}/*.tgz ${ARTIFACTS_PATH}/LICENSE"
