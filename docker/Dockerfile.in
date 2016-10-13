@@ -53,3 +53,5 @@ RUN npm install && \
 
 # Set to production mode (only after npm test to avoid mocha tests to fail)
 ENV NODE_ENV production
+
+HEALTHCHECK --interval=5s --timeout=5s --retries=3 CMD curl -f http://localhost:8080/api/v2/health || exit 1
