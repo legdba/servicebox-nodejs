@@ -87,9 +87,9 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
             log.warn('redis idle: %s');
         });
         // Test Redis
-        log.info('testing backend with a sum(\'0\', 0) request...')
+        log.info('testing backend with a sum(\'0\', 0) request...');
         self.addAndGet('0', 0, function incrCallback(err, result) {
-            if (err) callback(err);
+            if (err) { callback(err); }
             log.info("counter: " + result);
             log.info('backend test passed');
             callback(null); // Redis is up and running, init() is done
@@ -104,9 +104,9 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
 RedisSentinelBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
     this.redis.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
         if (err) {
-            if (callback) callback(err);
+            if (callback) { callback(err); }
         } else {
-            if (callback) callback(null, result);
+            if (callback) { callback(null, result); }
         }
     });
 };

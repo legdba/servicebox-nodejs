@@ -71,24 +71,24 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
         // Remove existing event handler and setup new ones to logs cluster state changes
         // (we don't want the .once('error',...) event handler below to do a callback later on upon error
         //  while we have already setup the backend connection once and did a callback)
-        self.cluster.removeListener('error', redisInitErrorCallback);
-        self.cluster.on('error', function redisErrorCallback(err) {
+        self.cluster.removeListener('error', redisClusterInitErrorCallback);
+        self.cluster.on('error', function redisClusterErrorCallback(err) {
             log.warn('redis-cluster error: %s', err);
-        }).on('connect', function redisConnectCallback(stream) {
+        }).on('connect', function redisClusterConnectCallback(stream) {
             log.warn('redis-cluster connected: %s', stream);
-        }).on('reconnecting', function redisReconnectingCallback() {
+        }).on('reconnecting', function redisClusterReconnectingCallback() {
             log.warn('redis-cluster reconnecting');
-        }).on('end', function redisEndCallback() {
+        }).on('end', function redisClusterEndCallback() {
             log.warn('redis-cluster ended');
-        }).on('drain', function redisDrainCallback() {
+        }).on('drain', function redisClusterDrainCallback() {
             log.warn('redis-cluster drained');
-        }).on('idle', function redisIdleCallback() {
+        }).on('idle', function redisClusterIdleCallback() {
             log.warn('redis-cluster idle: %s');
         });
         // Test cluster
-        log.info('testing backend with a sum(\'0\', 0) request...')
+        log.info('testing backend with a sum(\'0\', 0) request...');
         self.addAndGet('0', 0, function incrCallback(err, result) {
-            if (err) callback(err);
+            if (err) { callback(err); }
             log.info("counter: " + result);
             log.info('backend test passed');
             callback(null); // cluster is up and running, init() is done
@@ -103,9 +103,9 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
 RedisClusterBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
     this.cluster.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
         if (err) {
-            if (callback) callback(err);
+            if (callback) { callback(err); }
         } else {
-            if (callback) callback(null, result);
+            if (callback) { callback(null, result); }
         }
     });
 };
