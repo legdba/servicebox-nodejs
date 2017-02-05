@@ -29,7 +29,7 @@ if (err) {
   process.exit(1);
 }
 
-lugg.init({level: 'debug'});
+lugg.init({level: config.get('log.level')});
 var log = lugg('servicebox');
 log.debug('DEBUG enabled');
 log.info('INFO enabled');
