@@ -137,8 +137,25 @@ Note that in the docker registry each image is tagged with the branch name.
 Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
 
 ## AWS Lambda
+The application can run by defining AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+```
+export AWS_ACCESS_KEY_ID=xxx
+export AWS_SECRET_ACCESS_KEY=xxx
+```
 
+And then running
+```
+npm install
+./node_modules/.bin/serverless deploy
+```
+
+This will deploy the application as an AWS lambda function bound to an API Gateway endpoint according to ```serverless.yml``` configuration. Serverless will display the HTTP endpoints once the deployed is successfull. Those endpoints can be used to send requests, postfixed with the application REST path. Example:
+
+```
 TODO
+```
+
+NOTE: the default configuration exposes a public REST service that anybody could calls without control, and you're going to be billed for any calls (AWS has a generous free tier though).
 
 ## Using a Backend
 
