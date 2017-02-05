@@ -160,9 +160,17 @@ NOTE: the default configuration exposes a public REST service that anybody could
 
 Lambda support is in beta only. The following problems are known:
 - The 1st request fails; when AWS spins a new containers the request fails with a Cannot GET /api/v2/... message. Next requests work fine until AWS restart the container of start a new one.
-- The sum method does not work for some weird reason
 - Calling ```serverless deploy``` with nodejs 4 cause the deployed function to be broken for some reason. Deployemnt is successfully tested with nodejs 7.5.0 only.
 - The is not CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
+
+### Testing Lambda locally
+
+Run a local serverless server:
+```
+./node_modules/.bin/serverless offline
+```
+
+There is one significant difference with a real Lambda environment: severless offline re-instantiate the function on each call, while Lambda will keep it instanciated for a while. It should not be much a concern though as Lambda functions shall be stateless and disposable, so in that regard serverless offline behavior is sane as it enforces the worse case scenario.
 
 ## Using a Backend
 
