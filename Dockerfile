@@ -22,14 +22,19 @@ FROM node:7.5.0-alpine
 RUN mkdir -p /opt/node-app
 WORKDIR /opt/node-app
 
-# Install all dependencies
+# Install all dependencies and test
 COPY package.json /opt/node-app/
-RUN npm install
-
-# Add source code and test
 COPY app/ /opt/node-app/app/
 COPY LICENSE NOTICE /opt/node-app/app/
-RUN npm test && \
+RUN npm install && \
+    npm test && \
+    rm -rf node_modules && \
+    # Now that tests pass, reinstall the minimum dependencies to keep image as small as possible
+    export NODE_ENV=production && \
+    npm install && \
+    npm dedupe && \
+    # Remove a 78MB beast that is for testing only!
+    rm -rf node_modules/swagger-express-mw/node_modules/swagger-node-runner/node_modules/sway/node_modules/json-schema-faker && \
     node app/server.js --help
 
 # Prepare for service
