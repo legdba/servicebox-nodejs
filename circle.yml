@@ -3,6 +3,6 @@ machine:
     version: 4.3.2 # AWS Lambda compatibility
 test:
   override:
-    - mocha test --reporter mocha-junit-reporter:
+    - mocha app/test/**/*.js --reporter mocha-junit-reporter:
         environment:
           MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
