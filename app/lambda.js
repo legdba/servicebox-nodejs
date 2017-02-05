@@ -7,7 +7,28 @@ const app = express();
 
 var SwaggerExpress = require('swagger-express-mw');
 
+var check_config = function(cfg) {
+  var loglevels = ['debug', 'info', 'warn', 'error'];
+  if ( ! loglevels.includes(cfg.log.level) ) {
+    return new Error("invalid loglevel: '" + cfg.log.level + "'; valid values are '" + loglevels.join("', '") + "'");
+  }
+  if ( ! backend_factory.list().includes(cfg.backend.type)) {
+    return new Error("invalid backend type: '" + cfg.backend.type + "'; valid values are '" + backend_factory.list().join("', '") + "'");
+  }
+}
+
 var lugg = require('lugg');
+lugg.init({level: 'error'});
+// FIXME: if the following line is BEFORE lugg.init() it throws exception, which means that the underlying code smells :(
+const backend_factory = require('./backend_factory').BackendFactory();
+
+var config = require('config');
+var err = check_config(config);
+if (err) {
+  console.error(err);
+  process.exit(1);
+}
+
 lugg.init({level: 'debug'});
 var log = lugg('servicebox');
 log.debug('DEBUG enabled');

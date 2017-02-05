@@ -24,24 +24,10 @@
 
 var lugg = require('lugg');
 lugg.init({level: 'error'});
+var befactory = require('./backend_factory').BackendFactory();
 var express = require('express');
 var app = express();
 module.exports = app; // for testing
-
-var build_be = function build_backend(type) {
-    switch (type) {
-        case 'memory':
-            return require('./api/helpers/memory_backend').MemoryBackend();
-        case 'cassandra':
-            return require('./api/helpers/cassandra_backend').CassandraBackend();
-        case 'redis-cluster':
-            return require('./api/helpers/rediscluster_backend').RedisClusterBackend();
-        case 'redis-sentinel':
-            return require('./api/helpers/redissentinel_backend').RedisSentinelBackend();
-        default:
-            throw new Error("invalid backend type: " + type);
-    }
-};
 
 var start = function start_server(config) {
     // Default config
@@ -67,9 +53,7 @@ var start = function start_server(config) {
     });
 
     d.run(function() {
-        var backend = build_be(backendType);
-
-        backend.init(backendOpts, function init_backend_callback(err) {
+        befactory.create(backendType, backendOpts, function init_backend_callback(err, backend) {
             if (err) {
                 log.error(err, "failed to init backend: %s", err);
                 process.exit(2);
