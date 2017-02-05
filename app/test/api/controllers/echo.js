@@ -37,7 +37,7 @@ describe('controllers', function() {
           .post('/api/v2/echo')
           .set('Accept', 'application/json')
           .type('json')
-          .send('{"message":"foo"}')
+          .send(JSON.stringify({"message":"foo"}))
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
