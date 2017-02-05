@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 ##############################################################
-FROM node:7.5.0
+FROM node:7.5.0-alpine
 
 # Prepare for dir
 RUN mkdir -p /opt/node-app
@@ -41,5 +41,5 @@ ENTRYPOINT [\
     ]
 EXPOSE 8080
 
-# Set to production mode (only after npm test to avoid mocha tests to fail)
-ENV NODE_ENV production
+# TODO: add a production.json with production settings (gzip, etc.)
+# ENV NODE_ENV production
