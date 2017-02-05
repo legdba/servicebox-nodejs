@@ -21,10 +21,6 @@
 
 'use strict';
 
-var makeClass = require('./api/helpers/make_class');
-var BackendFactory = makeClass.makeClass();
-exports.BackendFactory = BackendFactory;
-
 const backend_types = {
   'memory'        : require('./api/helpers/memory_backend').MemoryBackend(),
   'cassandra'     : require('./api/helpers/cassandra_backend').CassandraBackend(),
@@ -32,12 +28,10 @@ const backend_types = {
   'redis-sentinel': require('./api/helpers/redissentinel_backend').RedisSentinelBackend()
 }
 
-BackendFactory.prototype.constructor = function() {};
-
 /**
  * @return an array of string of valid backend type names.
  */
-BackendFactory.prototype.list = function list() {
+module.exports.list = function list() {
   return Object.keys(backend_types);
 };
 
@@ -49,7 +43,7 @@ BackendFactory.prototype.list = function list() {
  * @param opts json configuration for the backend
  * @param cb function(err, backend) called with err set in case of error backend set with the backend instance otherwhise
  */
-BackendFactory.prototype.create = function create(type, opts, cb) {
+module.exports.create = function create(type, opts, cb) {
   if (backend_types.hasOwnProperty(type)) {
     var be = backend_types[type];
     be.init(opts, function (err) {

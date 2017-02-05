@@ -20,7 +20,7 @@ var check_config = function(cfg) {
 var lugg = require('lugg');
 lugg.init({level: 'error'});
 // FIXME: if the following line is BEFORE lugg.init() it throws exception, which means that the underlying code smells :(
-const backend_factory = require('./backend_factory').BackendFactory();
+const backend_factory = require('./backend_factory');
 
 var config = require('config');
 var err = check_config(config);
