@@ -16,26 +16,23 @@
 # specific language governing permissions and limitations
 # under the License.
 ##############################################################
-# NodeJS __APP_NAME__ version __APP_VERSION__
-#
-# Run server with:
-# docker run -d -p 80:8080 quay.io/legdba/__APP_NAME__:__APP_VERSION__
-#
-# To get the list of supported arguments run
-# docker run -ti --rm -p 80:8080 quay.io/legdba/__APP_NAME__:__APP_VERSION__ --help
-#
-##############################################################
-FROM alpine:3.2
-MAINTAINER Vincent Bourdaraud <vincent@bourdaraud.com>
-
-# Install nodejs and npm
-RUN apk upgrade --update && apk add nodejs
+FROM node:7.5.0
 
 # Prepare for dir
-RUN mkdir -p /opt/__APP_FULLNAME__
+RUN mkdir -p /opt/node-app
+WORKDIR /opt/node-app
+
+# Install all dependencies
+COPY package.json /opt/node-app/
+RUN npm install
+
+# Add source code and test
+COPY app/ /opt/node-app/app/
+COPY LICENSE NOTICE /opt/node-app/app/
+RUN npm test && \
+    node app/server.js --help
 
 # Prepare for service
-WORKDIR /opt/__APP_FULLNAME__
 CMD ["-p", "8080"]
 ENTRYPOINT [\
     "npm",\
@@ -43,13 +40,6 @@ ENTRYPOINT [\
     "--"\
     ]
 EXPOSE 8080
-
-# Add application and tests that it is working fine
-ADD __ARTIFACT__.tgz /opt/__APP_FULLNAME__/
-COPY Dockerfile /opt/__APP_FULLNAME__/
-RUN npm install && \
-    npm test && \
-    npm start -- --help
 
 # Set to production mode (only after npm test to avoid mocha tests to fail)
 ENV NODE_ENV production
