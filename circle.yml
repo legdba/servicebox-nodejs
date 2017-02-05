@@ -1,14 +1,8 @@
 machine:
   node:
-    version: 0.12.7
-  services:
-    - docker
-deployment:
-  production: # just a label; label names are completely up to you
-    branch: master
-    commands:
-      - ./build_docker.sh
-  staging:
-    branch: /.*/
-    commands:
-      - ./build_docker.sh
+    version: 4.3.2 # AWS Lambda compatibility
+test:
+  override:
+    - mocha app/test/**/*.js --reporter mocha-junit-reporter:
+        environment:
+          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml

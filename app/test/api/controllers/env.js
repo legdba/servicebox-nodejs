@@ -41,7 +41,7 @@ describe('controllers', function() {
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql(process.env);
+            expect(res.body).to.deep.equal(process.env);
             done();
           });
       });

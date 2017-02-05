@@ -91,12 +91,12 @@ Sample request:
 curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/leak/free
 ```
 
-## GET /api/v2/calc/sum/{id}/{value}
-Sum {value} to {id} counter in and return the new value. The data is stored in the instance memory by defaul( statefull) and can be set to Cassandra or Redis to emulate a stateless 12-factor behavior.
+## GET /api/v2/calc/sum/{id}/{n}
+Sum {n} to {id} counter in and return the new value. The data is stored in the instance memory by default (statefull) and can be stored to Cassandra or Redis to emulate a stateless 12-factor behavior.
 
 Sample request:
 ```
-curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/calc/sum/0/1
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/calc/sum/counter-0/1
 ```
 
 ## GET /api/v2/calc/fibo-nth/{n}
@@ -133,10 +133,36 @@ docker run -ti -p :8080:8080 --rm=true quay.io/legdba/servicebox-nodejs:latest -
 ```
 Swagger API documentation available on http://your_container_ip:8080/swagger
 
-Note that in the docker registry each image is tagged with the git revision, commit and branch of the code
-used to generate the image. If you run quay.io/legdba/servicebox-nodejs:r23-7be1d82-master this is the revision 'r23'
-and commit '7be1d82' on branch 'master'. The associated code can be seen at https://github.com/legdba/servicebox-nodejs/commit/7be1d82
-or with a 'git 7be1d82' command when in the servicebox-nodejs repo.
+Note that in the docker registry each image is tagged with the branch name.
+Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
+
+## AWS Lambda (BETA)
+The application can run by defining AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+```
+export AWS_ACCESS_KEY_ID=xxx
+export AWS_SECRET_ACCESS_KEY=xxx
+```
+
+And then running
+```
+npm install
+./node_modules/.bin/serverless deploy
+```
+
+This will deploy the application as an AWS lambda function bound to an API Gateway endpoint according to ```serverless.yml``` configuration. Serverless will display the HTTP endpoints once the deployed is successfull. Those endpoints can be used to send requests, postfixed with the application REST path. Example:
+
+```
+curl -v https://xxxxxxxxxx.execute-api.us-west-2.amazonaws.com/dev/api/v2/echo/hello
+```
+NOTE: the default configuration exposes a public REST service that anybody could calls without control, and you're going to be billed for any calls (AWS has a generous free tier though).
+
+### Known Problems
+
+Lambda support is in beta only. The following problems are known:
+- The 1st request fails; when AWS spins a new containers the request fails with a Cannot GET /api/v2/... message. Next requests work fine until AWS restart the container of start a new one.
+- The sum method does not work for some weird reason
+- Calling ```serverless deploy``` with nodejs 4 cause the deployed function to be broken for some reason. Deployemnt is successfully tested with nodejs 7.5.0 only.
+- The is not CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
 
 ## Using a Backend
 
