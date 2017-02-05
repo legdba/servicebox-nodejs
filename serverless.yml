@@ -54,11 +54,59 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
+  api:
     handler: lambda.handler
     events:
       - http:
+          path: api/v2/echo
+          method: post
+          private: false
+      - http:
           path: api/v2/echo/{message}
+          method: get
+          private: false
+      - http:
+          path: api/v2/echo/{message}/{delay}
+          method: get
+          private: false
+      - http:
+          path: api/v2/env/vars
+          method: get
+          private: false
+      - http:
+          path: api/v2/env/vars/{name}
+          method: get
+          private: false
+      - http:
+          path: api/v2/env/hostname
+          method: get
+          private: false
+      - http:
+          path: api/v2/env/pid
+          method: get
+          private: false
+      - http:
+          path: api/v2/health
+          method: get
+          private: false
+      - http:
+          path: api/v2/health/{percentage}
+          method: get
+          private: false
+      - http:
+          path: api/v2/leak/{size}
+          method: get
+          private: false
+      - http:
+          path: api/v2/leak/free
+          method: get
+          private: false
+      - http:
+          path: api/v2/calc/sum/{id}/{n}
+          method: get
+          private: false
+      - http:
+          path: api/v2/calc/fibo-nth/{n}
           method: get
           private: false
 
