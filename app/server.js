@@ -24,7 +24,7 @@
 
 var lugg = require('lugg');
 lugg.init({level: 'error'});
-var befactory = require('./backend_factory').BackendFactory();
+var backend_factory = require('./backend_factory');
 var express = require('express');
 var app = express();
 module.exports = app; // for testing
@@ -53,7 +53,7 @@ var start = function start_server(config) {
     });
 
     d.run(function() {
-        befactory.create(backendType, backendOpts, function init_backend_callback(err, backend) {
+        backend_factory.create(backendType, backendOpts, function init_backend_callback(err, backend) {
             if (err) {
                 log.error(err, "failed to init backend: %s", err);
                 process.exit(2);
