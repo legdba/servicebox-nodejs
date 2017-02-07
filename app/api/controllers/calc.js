@@ -64,7 +64,7 @@ function sum(req, res) {
             log.error(err, 'failed to increase counter %s by %d : %s', id, n, err);
             res.status(502).json({message:'backend error: ' + err});
         } else {
-            log.info('new sum for id %d is %d', id, new_counter);
+            log.info('new sum for id %s is %d', id, new_counter);
             res.json({id:id, value:new_counter});
         }
     });
