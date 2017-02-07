@@ -156,15 +156,19 @@ curl -v https://xxxxxxxxxx.execute-api.us-west-2.amazonaws.com/dev/api/v2/echo/h
 ```
 NOTE: the default configuration exposes a public REST service that anybody could calls without control, and you're going to be billed for any calls (AWS has a generous free tier though).
 
-### Known Problems
+The following environment variable can be set to configure servicebox while it runs as a lambda function:
+```shell
+LOG_LEVEL="debug|info|warn|error"
+BACKEND_TYPE="memory|cassandra|redis-cluster|redis-sentinel|dynamodb"
+BACKEND_OPTIONS='see documentation in the backend section'
+```
 
+### Known Problems
 Lambda support is in beta only. The following problems are known:
-- The 1st request fails; when AWS spins a new containers the request fails with a Cannot GET /api/v2/... message. Next requests work fine until AWS restart the container of start a new one.
 - Calling ```serverless deploy``` with nodejs 4 cause the deployed function to be broken for some reason. Deployemnt is successfully tested with nodejs 7.5.0 only.
-- The is not CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
+- There is no CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
 
 ### Testing Lambda locally
-
 Run a local serverless server:
 ```shell
 ./node_modules/.bin/serverless offline
@@ -173,7 +177,6 @@ Run a local serverless server:
 There is one significant difference with a real Lambda environment: severless offline re-instantiate the function on each call, while Lambda will keep it instanciated for a while. It should not be much a concern though as Lambda functions shall be stateless and disposable, so in that regard serverless offline behavior is sane as it enforces the worse case scenario.
 
 ## Using a Backend
-
 Servicebox needs a backend for the ```/api/v2/calc/sum``` service which increments a counter into a backend. This service is intended to test 12-factor type of interaction with a backend used for transient data such as a session cache. All backends implement an atomic increment that is totally stateless and share-nothing; the same counters can be increment by any number of servicebox instances.
 
 ### Memory
@@ -193,11 +196,15 @@ Set load balancing policies:
 --be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
 ```
 
+When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+
 ### Redis Cluster
 To use a redis cluster as a backend add the following options:
 ```shell
 --be-type=redis-cluster --be-opts='{"drivercfg":[{"host":"localhost","port":"6379"}]}'
 ```
+
+When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
 
 The "drivercfg" JSON param is the IORedis client JSON connection object.
 Any IORedis config is supported. This is basically a list of of the cluster nodes
@@ -213,6 +220,8 @@ To use a redis with sentinels as a backend add the following options:
 --be-type=redis-sentinel --be-opts='{"drivercfg":{ "sentinels": [ {"host": "104.131.130.202", "port":26379}, {"host": "104.236.144.145", "port":26379}, {"host": "104.236.145.222", "port":26379} ], "name": "mymaster" }}'
 ```
 
+When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+
 The "drivercfg" JSON param is the IORedis client JSON connection object.
 Any IORedis config is supported. This is basically a list of the sentinels to
 connect to in order to discover the whole list of sentinels, masters and slaves.
@@ -227,6 +236,8 @@ To use DynamoDB as a backend add the following options (make sure to replace val
 ```shell
 --be-type=dynamodb --be-opts='{"accessKeyId": "yourkey", "secretAccessKey": "yoursecret","region": "us-west-2", "apiVersion": "2012-08-10"}'
 ```
+
+When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
 
 The DynamoDB shall have a ```servicebox``` table with a ```string``` ```id``` attribute as the primary key.
 
@@ -272,11 +283,9 @@ dynamodb.createTable(createdb_params, function(err, data) {
 ```
 
 # Exposed services
-
 Get Swagger definition at http://yourhost:8080/api/v2/swagger (this will return JSON or YAML based your Accept header).
 
 # Security
-
 Debug log level will log backend configuration strings, including credentials. Make sure NOT to use debug where this is a security issue.
 
 # TODO
