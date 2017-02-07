@@ -135,7 +135,7 @@ Swagger API documentation available on http://your_container_ip:8080/swagger
 
 Note that in the docker registry each image is tagged with the branch name. Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
 
-## AWS Lambda (BETA)
+## AWS Lambda
 Servicebox can be deployed an AWS Lambda function by setting the AWS credential in your environment (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY):
 ```shell
 export AWS_ACCESS_KEY_ID=xxx
@@ -160,13 +160,15 @@ The following environment variable can be set to configure servicebox while it r
 ```shell
 LOG_LEVEL="debug|info|warn|error"
 BACKEND_TYPE="memory|cassandra|redis-cluster|redis-sentinel|dynamodb"
-BACKEND_OPTIONS='see documentation in the backend section'
+BACKEND_OPTIONS='same value as --be-opts, single-quote enclosed'
 ```
 
-### Known Problems
-Lambda support is in beta only. The following problems are known:
+Note that as of Feb-2017 AWS Lambda does not allow commas (',') in variable values. As a workaround servicebox replaces any ```=comma=``` into the BACKEND_OPTIONS value with a comma.
+
+### Known Limitations
+- AWS Lambda runs on NodeJS 4.3.2 which lack some welcome features of more modern NodeJS versions :(
 - Calling ```serverless deploy``` with nodejs 4 cause the deployed function to be broken for some reason. Deployemnt is successfully tested with nodejs 7.5.0 only.
-- There is no CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
+- There is no CI/CD integration test for lambda servicebox-nodejs yet.
 
 ### Testing Lambda locally
 [Serverless Framework](https://serverless.com/) can run the lambda function locally for testing purpose:

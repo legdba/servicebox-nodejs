@@ -41,8 +41,12 @@ provider:
 #            - "Ref" : "ServerlessDeploymentBucket"
 
 # you can define service wide environment variables here
-#  environment:
-#    variable1: value1
+  environment:
+    LOG_LEVEL: info
+    BACKEND_TYPE: dynamodb
+    # AWS Lambda does NOT allow commas (',') in env variables.
+    # As a workaround '=comma=' is used instead and replaced at runtime.
+    BACKEND_OPTIONS: '{"accessKeyId": "${env:AWS_ACCESS_KEY_ID}"=comma= "secretAccessKey": "${env:AWS_SECRET_ACCESS_KEY}"=comma= "region": "us-west-2"=comma= "apiVersion": "2012-08-10"}'
 
 # you can add packaging information here
 #package:

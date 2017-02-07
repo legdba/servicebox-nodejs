@@ -7,6 +7,19 @@ const app = express();
 
 var SwaggerExpress = require('swagger-express-mw');
 
+/**
+ * AWS Lambda support env variable BUT for some weird
+ * (and undocumented) reason commas are not allowed in
+ * the values. This is obviously VERY annoying as it is
+ * convenient to pass JSON docs as en variables.
+ *
+ * Until this ridiculous limitation is removed, commas
+ * Can be replaced with '=comma='.
+ */
+var unescape_commas = function unescape_commas(str) {
+  return str.replace(new RegExp('=comma=', 'g'), ',');
+}
+
 var check_config = function(cfg) {
   var loglevels = ['debug', 'info', 'warn', 'error'];
   if ( loglevels.indexOf(cfg.log.level) == -1) {
@@ -26,6 +39,7 @@ var server = null;
 var init_server = function init_server(cb) {
 
   var config = require('config');
+
   var err = check_config(config);
   if (err) {
     cb(err, null);
@@ -35,6 +49,7 @@ var init_server = function init_server(cb) {
     var log = lugg('servicebox');
     log.debug('DEBUG enabled');
     log.info('INFO enabled');
+    log.warn('WARN enabled');
 
     app.use(cors());
     app.use(bodyParser.json());
@@ -44,7 +59,10 @@ var init_server = function init_server(cb) {
     // Init backend as per configuration
     const backend_factory = require('./backend_factory');
     var betype = config.get('backend.type');
-    var beopts = JSON.parse(config.get('backend.options'));
+    var beopts = "" || config.get('backend.options');
+    beopts = unescape_commas(beopts);
+    log.debug('beopts: %s', beopts);
+    beopts = JSON.parse(beopts);
     backend_factory.create(betype, beopts, function init_backend_callback(err, backend) {
       if (err) {
         cb(err, null);
