@@ -174,6 +174,8 @@ There is one significant difference with a real Lambda environment: severless of
 
 ## Using a Backend
 
+Servicebox needs a backend for the ```/api/v2/calc/sum``` service which increments a counter into a backend. This service is intended to test 12-factor type of interaction with a backend used for transient data such as a session cache. All backends implement an atomic increment that is totally stateless and share-nothing; the same counters can be increment by any number of servicebox instances.
+
 ### Memory
 This is the default. No configuration needed.
 
@@ -191,7 +193,7 @@ Set load balancing policies:
 --be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
 ```
 
-### Redis-cluster
+### Redis Cluster
 To use a redis cluster as a backend add the following options:
 ```shell
 --be-type=redis-cluster --be-opts='{"drivercfg":[{"host":"localhost","port":"6379"}]}'
@@ -205,7 +207,7 @@ three (3) nodes.
 
 Note that the redis cluster client will try to connect to the cluster until it succeeds.
 
-### Redis-sentinel
+### Redis Sentinel
 To use a redis with sentinels as a backend add the following options:
 ```shell
 --be-type=redis-sentinel --be-opts='{"drivercfg":{ "sentinels": [ {"host": "104.131.130.202", "port":26379}, {"host": "104.236.144.145", "port":26379}, {"host": "104.236.145.222", "port":26379} ], "name": "mymaster" }}'
@@ -242,7 +244,7 @@ tar xvzf ../dynamodb_local_latest.tar.gz
 java -Djava.library.path=./DynamoDBLocal_lib/ -jar DynamoDBLocal.jar -inMemory
 ```
 
-The servicebox table can be created with this code snippet:
+The servicebox table can be created with this code snippet (run with nodejs):
 ```javascript
 var aws = require('aws-sdk');
 var opts = {"region":"localhost","apiVersion":"2012-08-10","endpoint":{"protocol":"http:","host":"localhost:8000","port":8000,"hostname":"localhost","pathname":"/","path":"/","href":"http://localhost:8000/"}};
