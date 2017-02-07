@@ -137,24 +137,25 @@ Note that in the docker registry each image is tagged with the branch name.
 Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
 
 ## AWS Lambda (BETA)
-The application can run by defining AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+Servicebox can be deployed an AWS Lambda function by setting the AWS credential in your environment (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY):
 ```shell
 export AWS_ACCESS_KEY_ID=xxx
 export AWS_SECRET_ACCESS_KEY=xxx
 ```
 
-And then running
+And then running [Serverless Framework](https://serverless.com/):
 ```shell
 npm install
 ./node_modules/.bin/serverless deploy
 ```
 
-This will deploy the application as an AWS lambda function bound to an API Gateway endpoint according to ```serverless.yml``` configuration. Serverless will display the HTTP endpoints once the deployed is successfull. Those endpoints can be used to send requests, postfixed with the application REST path. Example:
+This will deploy the application as an AWS lambda function bound to an API Gateway endpoint as per the ```serverless.yml``` configuration. Serverless will display the HTTP endpoints once deployed. Those are servicebox REST endpoints; example:
 
 ```shell
 curl -v https://xxxxxxxxxx.execute-api.us-west-2.amazonaws.com/dev/api/v2/echo/hello
 ```
-NOTE: the default configuration exposes a public REST service that anybody could calls without control, and you're going to be billed for any calls (AWS has a generous free tier though).
+
+NOTE: the default configuration exposes a public REST service that anybody could call without control.
 
 The following environment variable can be set to configure servicebox while it runs as a lambda function:
 ```shell
@@ -169,12 +170,14 @@ Lambda support is in beta only. The following problems are known:
 - There is no CI/CD on the lambda integration. Upon a git push the Circle+CI tests should be augmented to deploy a test function on AWS Lambda and test it with real requests.
 
 ### Testing Lambda locally
-Run a local serverless server:
+[Serverless Framework](https://serverless.com/) can run the lambda function locally for testing purpose:
 ```shell
 ./node_modules/.bin/serverless offline
 ```
 
-There is one significant difference with a real Lambda environment: severless offline re-instantiate the function on each call, while Lambda will keep it instanciated for a while. It should not be much a concern though as Lambda functions shall be stateless and disposable, so in that regard serverless offline behavior is sane as it enforces the worse case scenario.
+Once it runs the servicebox lambda function is accessible via regular REST enpoints.
+
+There is one significant difference with a real Lambda environment: internal state is lost between each call (this affects the calc/sum service). This should not be much a concern as Lambda functions shall be stateless and disposable; in that regard this serverless behavior is sane as it enforces the worse case scenario.
 
 ## Using a Backend
 Servicebox needs a backend for the ```/api/v2/calc/sum``` service which increments a counter into a backend. This service is intended to test 12-factor type of interaction with a backend used for transient data such as a session cache. All backends implement an atomic increment that is totally stateless and share-nothing; the same counters can be increment by any number of servicebox instances.
