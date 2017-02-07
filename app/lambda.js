@@ -116,7 +116,7 @@ exports.handler = function(event, context) {
   // the call to awsServerlessExpress.proxy until everything is ready
   get_server(function(err, server) {
     if (err) {
-      console.error(err);
+      console.error(err, err.stack);
       process.exit(1);
     } else {
       awsServerlessExpress.proxy(server, event, context);

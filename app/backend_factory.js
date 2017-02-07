@@ -25,7 +25,8 @@ const backend_types = {
   'memory'        : require('./api/helpers/memory_backend').MemoryBackend(),
   'cassandra'     : require('./api/helpers/cassandra_backend').CassandraBackend(),
   'redis-cluster' : require('./api/helpers/rediscluster_backend').RedisClusterBackend(),
-  'redis-sentinel': require('./api/helpers/redissentinel_backend').RedisSentinelBackend()
+  'redis-sentinel': require('./api/helpers/redissentinel_backend').RedisSentinelBackend(),
+  'dynamodb'      : require('./api/helpers/dynamodb_backend').DynamoDbBackend(),
 }
 
 /**
@@ -41,19 +42,19 @@ module.exports.list = function list() {
  * Success/failur enotified with the callback.
  * @param type the backend type
  * @param opts json configuration for the backend
- * @param cb function(err, backend) called with err set in case of error backend set with the backend instance otherwhise
+ * @param callback function(err, backend) called with err set in case of error backend set with the backend instance otherwhise
  */
-module.exports.create = function create(type, opts, cb) {
+module.exports.create = function create(type, opts, callback) {
   if (backend_types.hasOwnProperty(type)) {
     var be = backend_types[type];
     be.init(opts, function (err) {
       if (err) {
-        cb(err, null);
+        callback(err, null);
       } else {
-        cb(null, be);
+        callback(null, be);
       }
     });
   } else {
-    callback("invalid backend type: '" + type + "', valid values are '" + backend_types.keys().join("', '"));
+    callback("invalid backend type: '" + type + "', valid values are '" + Object.keys(backend_types).join("', '"));
   }
 };

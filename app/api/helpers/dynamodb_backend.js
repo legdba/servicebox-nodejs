@@ -31,22 +31,26 @@ exports.DynamoDbBackend = DynamoDbBackend;
 
 DynamoDbBackend.prototype.constructor = function() {};
 
-DynamoDbBackend.prototype.init = function init(opts, callback) {
-  aws.config.update(opts);
-  var dynamodb = new aws.DynamoDB(opts);
+DynamoDbBackend.prototype.init = function init(jsoncfg, callback) {
+  jsoncfg = jsoncfg || {"region":"localhost","apiVersion":"2012-08-10","endpoint":{"protocol":"http:","host":"localhost:8000","port":8000,"hostname":"localhost","pathname":"/","path":"/","href":"http://localhost:8000/"}};
+  aws.config.update(jsoncfg);
+  var dynamodb = new aws.DynamoDB(jsoncfg);
   var self=this;
   self.table = 'servicebox';
   // validate connection and required table
-  log.info('contacting DynamodDB at %s', opts.region);
+  log.debug('contacting DynamoDB at %j', jsoncfg);
   dynamodb.listTables(function(err, data) {
     if (err) {
       callback(err);
     } else {
-      if (data.TableNames.includes(self.table)) {
+      log.debug("reply: %j", data);
+      if (data.hasOwnProperty('TableNames') &&
+          data.TableNames.indexOf(self.table) != -1) {
         self.dynamodb = dynamodb;
         log.info('DynamoDB check suceeded');
         callback(null);
       } else {
+        log.warn('DynamodDB check failed; maybe there is no \'servicebox\' table.');
         callback("missing DynamoDB table: " + self.table);
       }
     }
