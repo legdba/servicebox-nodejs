@@ -123,7 +123,7 @@ npm start -- --help
 ```
 
 ## Docker
-Latest version is always available in Quai.io and can be used as a docker application:
+Latest version is always available at [Quai.io](https://quay.io/repository/legdba/servicebox-nodejs) or [Docker Hub](https://hub.docker.com/r/legdba/servicebox-nodejs/) and can be used as a docker application:
 ```shell
 docker run -ti -p :8080:8080 --rm=true quay.io/legdba/servicebox-nodejs:latest
 ```
@@ -133,8 +133,7 @@ docker run -ti -p :8080:8080 --rm=true quay.io/legdba/servicebox-nodejs:latest -
 ```
 Swagger API documentation available on http://your_container_ip:8080/swagger
 
-Note that in the docker registry each image is tagged with the branch name.
-Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
+Note that in the docker registry each image is tagged with the branch name. Initially the image tag contained the GIT commit ID, but this is a non-standard DockerHub/Quay.io feature and was available only through customer builds, which are a pain to manage and maintain.
 
 ## AWS Lambda (BETA)
 Servicebox can be deployed an AWS Lambda function by setting the AWS credential in your environment (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY):
