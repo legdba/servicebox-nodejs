@@ -36,22 +36,23 @@ CassandraBackend.prototype.constructor = function() {};
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
  */
 CassandraBackend.prototype.init = function init(jsoncfg, callback) {
-    
+
     jsoncfg = jsoncfg || {contactPoints: ['localhost:9042']};
     var config = {};
-    
+
     config.contactPoints = jsoncfg.contactPoints;
-    
+
     if (jsoncfg.authProvider) {
         switch (jsoncfg.authProvider.type) {
         case 'PlainTextAuthProvider':
             config.authProvider = new cassandra.auth.PlainTextAuthProvider(jsoncfg.authProvider.username, jsoncfg.authProvider.password);
             break;
         default:
+            // FIXME: replace exception will callback
             throw new Error("invalid cassandra authProvider: " + jsoncfg.authProvider.type);
         }
     }
-    
+
     if (jsoncfg.loadBalancingPolicy) {
         switch(jsoncfg.loadBalancingPolicy.type) {
         case 'DCAwareRoundRobinPolicy':
@@ -59,11 +60,12 @@ CassandraBackend.prototype.init = function init(jsoncfg, callback) {
             config.policies.loadBalancing = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(jsoncfg.loadBalancingPolicy.localDC);
             break;
         default:
+            // FIXME: replace exception will callback
             throw new Error("invalid cassandra loadBalancingPolicy: " + jsoncfg.loadBalancingPolicy.type);
         }
     }
     //cfg.authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
-    log.info('contacting Cassandra cluster at %j', config);
+    log.debug('contacting Cassandra cluster at %j', config);
     var self=this;
     self.client = new cassandra.Client(config);
     self.client.connect(function connectCassandraCallback(err) {

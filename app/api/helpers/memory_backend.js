@@ -38,7 +38,11 @@ MemoryBackend.prototype.init = function init(contactPoints, callback) {
  * @param callback Executes callback(err, new_counter)
  */
 MemoryBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
+  if (this.hasOwnProperty('counters')) {
     if (this.counters[id]) { this.counters[id] += number; }
     else { this.counters[id] = number; }
     callback(undefined, this.counters[id]);
+  } else {
+    callback('MemoryBackend is not properly initialized. Have you called MemoryBackend.init()?')
+  }
 };

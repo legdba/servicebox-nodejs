@@ -23,34 +23,18 @@
 'use strict';
 
 var lugg = require('lugg');
-lugg.init({level: 'error'});
 var express = require('express');
 var app = express();
 module.exports = app; // for testing
 
-var build_be = function build_backend(type) {
-    switch (type) {
-        case 'memory':
-            return require('./api/helpers/memory_backend').MemoryBackend();
-        case 'cassandra':
-            return require('./api/helpers/cassandra_backend').CassandraBackend();
-        case 'redis-cluster':
-            return require('./api/helpers/rediscluster_backend').RedisClusterBackend();
-        case 'redis-sentinel':
-            return require('./api/helpers/redissentinel_backend').RedisSentinelBackend();
-        default:
-            throw new Error("invalid backend type: " + type);
-    }
-};
-
 var start = function start_server(config) {
     // Default config
-    var def = {port:8080, loglevel:'warn', backendType:'memory', backendOpts:{} };
+    var def = {port:8080, loglevel:'warn', backendType:'memory' };
     config = config || def;
     var port = config.port || def.port;
     var loglevel = config.loglevel || def.loglevel;
     var backendType = config.backendType || def.backendType;
-    var backendOpts = config.backendOpts || def.backendOpts;
+    var backendOpts = config.backendOpts;
 
     // Init logs
     lugg.init({level: loglevel});
@@ -62,16 +46,19 @@ var start = function start_server(config) {
     // Ensure async exception in callbacks get cautch and properly logged
     var d = require('domain').create();
     d.on('error', function(err) {
-        log.error(err, "unhandled exception");
+        log.error(err, err.stack);
         process.exit(2);
     });
 
     d.run(function() {
-        var backend = build_be(backendType);
-
-        backend.init(backendOpts, function init_backend_callback(err) {
+        log.debug('init backend...');
+        var backend_factory = require('./backend_factory');
+        if (backendOpts) {
+          backendOpts = JSON.parse(backendOpts);
+        }
+        backend_factory.create(backendType, backendOpts, function init_backend_callback(err, backend) {
             if (err) {
-                log.error(err, "failed to init backend: %s", err);
+                log.error("failed to init backend: %j", err);
                 process.exit(2);
             } else {
                 // Ensure the backend instance will be in the context of all requests
@@ -83,6 +70,7 @@ var start = function start_server(config) {
                 });
 
                 // Init swagger and express
+                log.debug('init swagger-express...');
                 var SwaggerExpress = require('swagger-express-mw');
 
                 var express_config = {
@@ -91,13 +79,14 @@ var start = function start_server(config) {
 
                 SwaggerExpress.create(express_config, function init_swagger_callback(err, swaggerExpress) {
                     if (err) {
-                        log.error(err, "failed to init swagger");
+                        log.error("failed to init swagger: %j", err);
                         process.exit(2);
                     } else {
                         // install middleware
                         swaggerExpress.register(app);
 
                         // start server
+                        log.debug('binding port %d...', port);
                         app.listen(port, function app_listen_callback() {
                             log.warn('server listening on port %d in %s mode', port, app.settings.env);
                         });
@@ -116,7 +105,7 @@ if(require.main === module) {
     var opt = require('node-getopt').create([
         ['p' , 'port=PORT'           , 'http server port; default=8080'],
         ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra|redis-cluster|redis-sentinel); default=memory'+CRLS+'  memory:'+CRLS+'    Use local memory as a backend; application is then statefull and'+CRLS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
+        ['b' , 'be-type=TYPE'        , 'backend type (memory|cassandra|redis-cluster|redis-sentinel|dynamodb); default=memory'+CRLS+'  memory:'+CRLS+'    Use local memory as a backend; application is then statefull and'+CRLS+'    cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'    use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
         ['o' , 'be-opts=OPTS'        , 'backend connection options; depends on type.'+CRLS+'  memory:'+CRLS+'    ignore any --be-opts value.'+CRLS+'  cassandra:'+CRLS+'    contactPoints string as per https://github.com/datastax/java-driver;'+CRLS+'    example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
         ['h' , 'help'                , 'display this help'],
     ])
@@ -125,17 +114,13 @@ if(require.main === module) {
     if (!opt.options['log-level']) { opt.options['log-level']='info'; }
     if (!opt.options.port) { opt.options.port=8080; }
     if (!opt.options['be-type']) { opt.options['be-type']='memory'; }
-    if (opt.options['be-type'] === 'cassandra' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"contactPoints":["localhost:9042"]}'; }
-    if (opt.options['be-type'] === 'memory') { opt.options['be-opts'] = "{}"; }
-    if (opt.options['be-type'] === 'redis-cluster' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"drivercfg":[{"host":"localhost","port":"6379"}]}'; }
-    if (opt.options['be-type'] === 'redis-sentinel' && opt.options['be-opts'] === undefined) { opt.options['be-opts'] = '{"drivercfg":{sentinels:[{host:"localhost", port:26379"}], "name":"mymaster"}}'; }
     //console.info(opt);
 
     start({
         port: opt.options.port,
         loglevel: opt.options['log-level'],
         backendType: opt.options['be-type'],
-        backendOpts: JSON.parse(opt.options['be-opts']),
+        backendOpts: opt.options['be-opts']
     });
 } else {
     start({loglevel:'fatal'}); // for testing purpose

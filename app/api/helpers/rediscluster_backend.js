@@ -49,6 +49,7 @@ RedisClusterBackend.prototype.constructor = function() {};
  */
 RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
     var self = this;
+    jsoncfg = jsoncfg || {"drivercfg":[{"host":"localhost","port":"6379"}]};
     var cfg = jsoncfg.drivercfg;
 
     // NOTE regarding ioredis behavior:
@@ -58,7 +59,7 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
     // The implementation below is forcing enableOfflineQueue:false. This means that if the cluster is offline
     // any request will fail immediatly without retry which sounds better.
     // TODO: test if this cause errors upon a single master node failure.
-    log.info("ioredis connecting to " + JSON.stringify(cfg));
+    log.debug("Contacting Redis Cluster at " + JSON.stringify(cfg));
     self.cluster = new Redis.Cluster(cfg, {enableOfflineQueue:false});
 
     var redisInitErrorCallback = function redisInitCallback(err) {

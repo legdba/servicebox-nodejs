@@ -1,0 +1,7 @@
+log:
+  level: LOG_LEVEL
+http:
+  port: HTTP_PORT
+backend:
+  type: BACKEND_TYPE
+  options: BACKEND_OPTIONS

@@ -51,6 +51,7 @@ RedisSentinelBackend.prototype.constructor = function() {};
  */
 RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
     var self = this;
+    jsoncfg = jsoncfg || {"drivercfg":{sentinels:[{host:"localhost", port:26379}], "name":"mymaster"}};
     var cfg = jsoncfg.drivercfg;
 
     // NOTE regarding ioredis behavior:
@@ -59,7 +60,7 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
     // any wait to control it.
     // The implementation below is forcing enableOfflineQueue:false. This means that if the group is offline
     // any request will fail immediatly without retry which sounds better.
-    log.info("ioredis connecting to " + JSON.stringify(cfg));
+    log.debug("Contacting Redis Sentinel group at " + JSON.stringify(cfg));
     self.redis = new Redis(cfg, {enableOfflineQueue:false});
 
     var redisInitErrorCallback = function redisInitCallback(err) {
