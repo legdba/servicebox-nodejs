@@ -9,18 +9,10 @@ var SwaggerExpress = require('swagger-express-mw');
 
 var check_config = function(cfg) {
   var loglevels = ['debug', 'info', 'warn', 'error'];
-  if ( ! loglevels.includes(cfg.log.level) ) {
+  if ( loglevels.indexOf(cfg.log.level) == -1) {
     return new Error("invalid loglevel: '" + cfg.log.level + "'; valid values are '" + loglevels.join("', '") + "'");
   }
-  if ( ! backend_factory.list().includes(cfg.backend.type)) {
-    return new Error("invalid backend type: '" + cfg.backend.type + "'; valid values are '" + backend_factory.list().join("', '") + "'");
-  }
 }
-
-var lugg = require('lugg');
-lugg.init({level: 'error'});
-// FIXME: if the following line is BEFORE lugg.init() it throws exception, which means that the underlying code smells :(
-const backend_factory = require('./backend_factory');
 
 const awsServerlessExpress = require('aws-serverless-express');
 var server = null;
@@ -38,6 +30,7 @@ var init_server = function init_server(cb) {
   if (err) {
     cb(err, null);
   } else {
+    var lugg = require('lugg');
     lugg.init({level: config.get('log.level')});
     var log = lugg('servicebox');
     log.debug('DEBUG enabled');
@@ -48,15 +41,14 @@ var init_server = function init_server(cb) {
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(awsServerlessExpressMiddleware.eventContext());
 
-    // Use ephemeral backend for testing purpose so far
-    var backend = require('./api/helpers/memory_backend').MemoryBackend();
-    log.info('initializating backend...');
-    backend.init({}, function init_backend_callback(err) {
+    // Init backend as per configuration
+    const backend_factory = require('./backend_factory');
+    var betype = config.get('backend.type');
+    var beopts = JSON.parse(config.get('backend.options'));
+    backend_factory.create(betype, beopts, function init_backend_callback(err, backend) {
       if (err) {
         cb(err, null);
       } else {
-        log.info('backend initialized');
-
         // Add backend to request context
         app.use(function inject_backend_into_context(req, res, next){
             req.locals = {
