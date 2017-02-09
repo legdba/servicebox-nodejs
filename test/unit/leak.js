@@ -21,9 +21,7 @@
 var should = require('should'),
     expect = require('chai').expect,
     request = require('supertest'),
-    app = require('../../../server');
-var lugg = require('lugg');
-var log = lugg('leak');
+    app = require('../../app/server');
 
 process.env.A127_ENV = 'test';
 

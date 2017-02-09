@@ -30,6 +30,6 @@
   },
   "scripts": {
     "start": "app/server.js",
-    "test": "./node_modules/mocha/bin/mocha ./app/test/*/*/*.js"
+    "test": "./node_modules/mocha/bin/mocha ./test/unit/**/*.js"
   }
 }

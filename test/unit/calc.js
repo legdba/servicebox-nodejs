@@ -18,66 +18,71 @@
  # under the License.
  ##############################################################
  */
-var os = require('os'),
-    should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
+ var should = require('should'),
+     expect = require('chai').expect,
+     request = require('supertest'),
+     app = require('../../app/server');
+var MemoryBackend = require('../../app/api/helpers/memory_backend').MemoryBackend;
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('env', function() {
+  describe('calc', function() {
 
-    describe('GET /api/v2/env/vars', function() {
+    describe('GET /api/v2/calc/fibo-nth/{n}', function() {
 
-      it('should return current OS environment variables', function(done) {
+      it('should return 832040 for {n}=30', function(done) {
 
         request(app)
-          .get('/api/v2/env/vars')
+          .get('/api/v2/calc/fibo-nth/30')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            expect(res.body).to.deep.equal(process.env);
+            res.body.should.eql({n:30, term:832040});
             done();
           });
       });
 
-    });
-
-    describe('GET /api/v2/env/vars/{name}', function() {
-
-      it('should return {name} current OS environment variable', function(done) {
+      it('should return 422 on negative {n}', function(done) {
 
         request(app)
-          .get('/api/v2/env/vars/PATH')
+          .get('/api/v2/calc/fibo-nth/-1')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({PATH: process.env['PATH']});
-            done();
-          });
+          .expect(422, done);
       });
 
     });
 
-    describe('GET /api/v2/env/hostname', function() {
+    describe('GET /api/v2/calc/sum/{id}/{n}', function() {
 
-      it('should return {hostname} of current OS environment', function(done) {
-
+      it('should get count 1 on first call with {n}=1', function(done) {
+        app.locals = {backend: MemoryBackend()};
         request(app)
-          .get('/api/v2/env/hostname')
+          .get('/api/v2/calc/sum/0/1')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({hostname: os.hostname()});
+            res.body.should.eql({id:'0', value:1});
+            done();
+          });
+      });
+
+      it('should get count 3 on first call with {n}=2', function(done) {
+        app.locals = {backend: MemoryBackend()};
+        request(app)
+          .get('/api/v2/calc/sum/0/2')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end(function(err, res) {
+            should.not.exist(err);
+            res.body.should.eql({id:'0', value:3});
             done();
           });
       });

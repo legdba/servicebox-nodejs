@@ -18,73 +18,77 @@
  # under the License.
  ##############################################################
  */
-var should = require('should');
-var expect = require('chai').expect;
-var request = require('supertest');
-var app = require('../../../server');
-var MemoryBackend = require('../../../api/helpers/memory_backend').MemoryBackend;
+var should = require('should'),
+    expect = require('chai').expect,
+    request = require('supertest'),
+    app = require('../../app/server');
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('calc', function() {
+  describe('echo', function() {
 
-    describe('GET /api/v2/calc/fibo-nth/{n}', function() {
+    describe('POST /api/v2/echo', function() {
 
-      it('should return 832040 for {n}=30', function(done) {
+      it('should echo passed Message body', function(done) {
 
         request(app)
-          .get('/api/v2/calc/fibo-nth/30')
+          .post('/api/v2/echo')
           .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
+          .type('json')
+          .send(JSON.stringify({"message":"foo"}))
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({n:30, term:832040});
+            res.body.should.eql({message:'foo'});
             done();
           });
-      });
-
-      it('should return 422 on negative {n}', function(done) {
-
-        request(app)
-          .get('/api/v2/calc/fibo-nth/-1')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(422, done);
       });
 
     });
 
-    describe('GET /api/v2/calc/sum/{id}/{n}', function() {
+    describe('GET /api/v2/echo/{message}', function() {
 
-      it('should get count 1 on first call with {n}=1', function(done) {
-        app.locals = {backend: MemoryBackend()};
+      it('should echo passed {message}', function(done) {
+
         request(app)
-          .get('/api/v2/calc/sum/0/1')
+          .get('/api/v2/echo/foo')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({id:'0', value:1});
+            res.body.should.eql({message:'foo'});
             done();
           });
       });
 
-      it('should get count 3 on first call with {n}=2', function(done) {
-        app.locals = {backend: MemoryBackend()};
+    });
+
+    describe('GET /api/v2/echo/{message}/{delay}', function() {
+
+      it('should echo passed {message}', function(done) {
+
         request(app)
-          .get('/api/v2/calc/sum/0/2')
+          .get('/api/v2/echo/foo/1')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({id:'0', value:3});
+            res.body.should.eql({message:'foo'});
             done();
           });
+      });
+
+      it('should return 422 on negative {delay}', function(done) {
+
+        request(app)
+          .get('/api/v2/echo/foo/-1')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(422, done);
       });
 
     });
