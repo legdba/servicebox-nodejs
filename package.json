@@ -6,7 +6,7 @@
   "keywords": [],
   "author": "vincent@bourdaraud.com",
   "license": "Apache-2.0",
-  "main": "app/server.js",
+  "main": "app/index.js",
   "dependencies": {
     "aws-sdk": "2.9.0",
     "aws-serverless-express": "1.3.0",
@@ -29,7 +29,7 @@
     "supertest": "^3.0.0"
   },
   "scripts": {
-    "start": "app/server.js",
+    "start": "app/index.js",
     "test": "./node_modules/mocha/bin/mocha ./test/unit/**/*.js"
   }
 }

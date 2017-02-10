@@ -22,7 +22,9 @@ var os = require('os');
 var should = require('should');
 var expect = require('chai').expect;
 var request = require('supertest');
-var app = require('../../app/server');
+var lugg = require('lugg');
+lugg.init({level:'warn'});
+var app = require('../../app/server').test()._app;
 
 process.env.A127_ENV = 'test';
 
