@@ -18,13 +18,15 @@
  # under the License.
  ##############################################################
  */
- var should = require('should'),
-     expect = require('chai').expect,
-     request = require('supertest'),
-     app = require('../../app/server');
+process.env.LOG_LEVEL = 'warn';
+process.env.A127_ENV = 'test';
+
+var should = require('should');
+var expect = require('chai').expect;
+var request = require('supertest');
+var app = require('../../app/server');
 var MemoryBackend = require('../../app/api/helpers/memory_backend').MemoryBackend;
 
-process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 

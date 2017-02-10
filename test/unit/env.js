@@ -18,11 +18,11 @@
  # under the License.
  ##############################################################
  */
-var os = require('os'),
-    should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../app/server');
+var os = require('os');
+var should = require('should');
+var expect = require('chai').expect;
+var request = require('supertest');
+var app = require('../../app/server');
 
 process.env.A127_ENV = 'test';
 

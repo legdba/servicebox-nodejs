@@ -32,11 +32,25 @@ exports.CassandraBackend = CassandraBackend;
 CassandraBackend.prototype.constructor = function() {};
 
 /**
- * Connect Cassandra backend.
- * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
+ * Connect Cassandra backend, check the connection and check the ability to increment counters.
+ * @param <Function> callback Executes callback(err) with err set upon failure, with err set to null upon success.
  */
 CassandraBackend.prototype.init = function init(jsoncfg, callback) {
+  if (typeof callback != 'function') throw new Error('invalid callback');
+  this.connect(jsoncfg, function(err) {
+    if (err) {
+      return callback(err);
+    } else {
+      this.healthcheck(function(err) {
+        if (err) this.disconnect();
+        if (callback) callback(err);
+      });
+    }
+  });
+};
 
+CassandraBackend.prototype.connect = function connect(jsoncfg, callback) {
+    if (typeof callback != 'function') throw new Error('invalid callback');
     jsoncfg = jsoncfg || {contactPoints: ['localhost:9042']};
     var config = {};
 
@@ -48,7 +62,6 @@ CassandraBackend.prototype.init = function init(jsoncfg, callback) {
             config.authProvider = new cassandra.auth.PlainTextAuthProvider(jsoncfg.authProvider.username, jsoncfg.authProvider.password);
             break;
         default:
-            // FIXME: replace exception will callback
             throw new Error("invalid cassandra authProvider: " + jsoncfg.authProvider.type);
         }
     }
@@ -60,58 +73,106 @@ CassandraBackend.prototype.init = function init(jsoncfg, callback) {
             config.policies.loadBalancing = new cassandra.policies.loadBalancing.DCAwareRoundRobinPolicy(jsoncfg.loadBalancingPolicy.localDC);
             break;
         default:
-            // FIXME: replace exception will callback
             throw new Error("invalid cassandra loadBalancingPolicy: " + jsoncfg.loadBalancingPolicy.type);
         }
     }
+
     //cfg.authProvider = new cassandra.auth.PlainTextAuthProvider('my_user', 'p@ssword1!');
+
     log.debug('contacting Cassandra cluster at %j', config);
-    var self=this;
-    self.client = new cassandra.Client(config);
-    self.client.connect(function connectCassandraCallback(err) {
-        if(err) {
-            self.client.shutdown();
-            callback(err);
-        } else {
-            // Run a stupid request to ensure everything is fine
-            CassandraBackend.prototype.addAndGet.apply(self, [0, 0, function checkCassandraCallback(err, new_counter) {
-                if(err) {
-                    log.warn("Cassandra check failed; maybe Keyspace does not exist. If so run the following command: CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false ; CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id)) ;");
-                    self.client.shutdown();
-                    callback(err);
-                } else {
-                    log.info("Cassandra check succeeded");
-                    callback(null);
-                }
-            }]);
-        }
+    var _this=this;
+    _this.client = new cassandra.Client(config);
+    _this.client.connect(function connectCassandraCallback(err) {
+      if (err) {
+        log.debug('Cassandra connection failed: %s', err);
+        return callback(err);
+      } else {
+        log.debug('Cassandra connection succeeded');
+        return callback(null);
+      }
+    });
+};
+
+CassandraBackend.prototype.disconnect = function disconnect(jsoncfg, callback) {
+  this.client.shutdown();
+}
+
+CassandraBackend.prototype.healthcheck = function healthcheck(callback) {
+  if (typeof callback != 'function') throw new Error('invalid callback');
+  var _this=this;
+  log.debug('health-checking Cassandra...');
+  CassandraBackend.prototype.addAndGet.apply(_this, [0, 0, function checkCassandraCallback(err, new_counter) {
+      if(err) {
+          log.warn("Cassandra check failed; maybe Keyspace does not exist. If so run the following command: CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false ; CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id)) ;");
+          return callback(err);
+      } else {
+          log.debug("Cassandra check succeeded");
+          return callback(null);
+      }
+  }]);
+};
+
+CassandraBackend.prototype.dropAndCreateKeyspace = function dropAndCreateKeyspace(callback) {
+  if (typeof callback != 'function') throw new Error('invalid callback');
+  var _this = this;
+
+  var q = util.format("DROP KEYSPACE IF EXISTS calc");
+  log.debug('CQL query:', q);
+  _this.client.execute(q, function (err, results) {
+    log.debug("::: %j", err);
+      if (err) {
+        return callback("failed to drop keyspace: " + err);
+      } else {
+
+        var q = util.format("CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false");
+        log.debug('CQL query:', q);
+        _this.client.execute(q, function (err, results) {
+            if (err) {
+              return callback("failed to create keyspace: " + err);
+            } else {
+
+              var q = util.format("CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id))");
+              log.debug('CQL query:', q);
+              _this.client.execute(q, function execute(err, results) {
+                  if (err) {
+                    return callback("failed to create table: " + err);
+                  } else {
+                    return callback(null);
+                  }
+                });
+
+            }
+          });
+
+      }
     });
 };
 
 /**
  * Add 'number' to counter 'id' and return the new value in callback.
- * @param callback Executes callback(err, new_counter) with err set upon error and with new counter upon success
+ * @param <Function> callback Executes callback(err, new_counter) with err set upon error and with new counter upon success
  */
 CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
+    if (typeof callback != 'function') throw new Error('invalid callback');
     var q = util.format("UPDATE calc.sum SET sum=sum+%s WHERE id='%s'", number, id);
-    var self = this;
+    var _this = this;
     log.debug('CQL query:', q);
-    self.client.execute(q, function (err, results) {
+    _this.client.execute(q, function execute(err, results) {
        if (err) {
-           if (callback) callback(err);
+           return callback(err);
        } else {
            log.debug('CQL result(s):', results);
            var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
            log.debug('CQL query:', q);
-           self.client.execute(q, function cqslExecCallback(err, results) {
+           _this.client.execute(q, function cqslExecCallback(err, results) {
                if (err) {
-                   if (callback) callback(err);
+                   return callback(err);
                } else {
                    log.debug('CQL result(s):', results);
                    if ( !results || !results.rows[0] ) {
-                       if (callback) callback( new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id) );
+                       return callback( 'empty results for: SELECT * FROM calc.sum WHERE id='+id );
                    } else {
-                       if (callback) callback( null, parseInt(results.rows[0].sum) );
+                       return callback( null, parseInt(results.rows[0].sum, 10) );
                    }
                }
            });
