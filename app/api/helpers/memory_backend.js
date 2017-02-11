@@ -20,29 +20,31 @@
  */
 'use strict';
 
-var makeClass = require('./make_class');
-//var util = require('util');
-//var lugg = require('lugg');
-
-var MemoryBackend = makeClass.makeClass();
-exports.MemoryBackend = MemoryBackend;
-
-MemoryBackend.prototype.constructor = function() {};
-
-MemoryBackend.prototype.init = function init(contactPoints, callback) {
-    this.counters = {};
-    callback(null);
+module.exports = {
+  create: function create(jsoncfg) {
+    return new MemoryBackend();
+  }
 };
 
-/**
- * @param callback Executes callback(err, new_counter)
- */
+function MemoryBackend() {};
+MemoryBackend.prototype.constructor = MemoryBackend;
+
+MemoryBackend.prototype.bind = function init(callback) {
+  if (callback && typeof callback !== 'function') throw new Error('invalid callback');
+  this.counters = {};
+  if (callback) return callback(null);
+  return this;
+};
+
 MemoryBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
+  if (typeof callback !== 'function') throw new Error('invalid callback');
   if (this.hasOwnProperty('counters')) {
     if (this.counters[id]) { this.counters[id] += number; }
     else { this.counters[id] = number; }
-    callback(undefined, this.counters[id]);
+    return callback(undefined, this.counters[id]);
   } else {
-    callback('MemoryBackend is not properly initialized. Have you called MemoryBackend.init()?')
+    // The following failure is totally artificial (counters could be initialized in the constructor)
+    // But intended to simulate the behavior of a real backend class (which requires a call to bind()).
+    callback(new Error('MemoryBackend is not properly initialized. Have you called MemoryBackend.bind()?'))
   }
 };

@@ -26,8 +26,8 @@ var expect = require('chai').expect;
 var request = require('supertest');
 var lugg = require('lugg');
 lugg.init({level:'warn'});
-var app = require('../../app/server').test()._app;
-var MemoryBackend = require('../../app/api/helpers/memory_backend').MemoryBackend;
+var app = require('../../app/server').test();
+var MemoryBackend = require('../../app/api/helpers/memory_backend');
 
 
 describe('controllers', function() {
@@ -63,30 +63,43 @@ describe('controllers', function() {
 
     describe('GET /api/v2/calc/sum/{id}/{n}', function() {
 
+      // Define our own backend that we controll and can inspect
+      var be = MemoryBackend.create();
+      be.bind();
+      app.use(function(req, res, next){
+        req.locals = {
+          backend: be
+        };
+        next();
+      });
+
       it('should get count 1 on first call with {n}=1', function(done) {
-        app.locals = {backend: MemoryBackend()};
+        expect(be.counters['0']).to.equals(undefined);
         request(app)
           .get('/api/v2/calc/sum/0/1')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({id:'0', value:1});
+            expect(err).to.not.exist;
+            expect(res.body).to.eql({id:'0', value:1});
+            expect(be.counters['0']).to.equals(1);
             done();
           });
       });
 
-      it('should get count 3 on first call with {n}=2', function(done) {
-        app.locals = {backend: MemoryBackend()};
+      it('should get count 3 on second call with {n}=2', function(done) {
+        be.counters['0'] = 1;
+        expect(be.counters['0']).to.equals(1);
         request(app)
           .get('/api/v2/calc/sum/0/2')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({id:'0', value:3});
+            expect(err).to.not.exist;
+            expect(res.body).to.eql({id:'0', value:3});
+            expect(be.counters['0']).to.equals(3);
             done();
           });
       });

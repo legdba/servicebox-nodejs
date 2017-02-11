@@ -23,6 +23,7 @@
 'use strict';
 
 var lugg = require('lugg');
+var BackendFactory = require('./backend_factory');
 
 /**
  * Init logs.
@@ -49,7 +50,7 @@ var getConfig = function getConfig() {
   var opt = require('node-getopt').create([
     ['p' , 'port=PORT'       , 'http server port; default=8080'],
     ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-    ['b' , 'be-type=TYPE'    , 'backend type (memory|cassandra|redis-cluster|redis-sentinel|dynamodb); default=memory'+CRLS+'  memory:'+CRLS+'  Use local memory as a backend; application is then statefull and'+CRLS+'  cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'  use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
+    ['b' , 'be-type=TYPE'    , 'backend type (' + BackendFactory.list().join('|') + '); default=memory'+CRLS+'  memory:'+CRLS+'  Use local memory as a backend; application is then statefull and'+CRLS+'  cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'  use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
     ['o' , 'be-opts=OPTS'    , 'backend connection options; depends on type.'+CRLS+'  memory:'+CRLS+'  ignore any --be-opts value.'+CRLS+'  cassandra:'+CRLS+'  contactPoints string as per https://github.com/datastax/java-driver;'+CRLS+'  example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
     ['h' , 'help'        , 'display this help'],
   ])

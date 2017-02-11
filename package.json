@@ -30,6 +30,7 @@
   },
   "scripts": {
     "start": "app/index.js",
-    "test": "./node_modules/mocha/bin/mocha ./test/unit/**/*.js"
+    "test": "./node_modules/.bin/mocha ./test/unit/**/*.js",
+    "test-integration": "./node_modules/.bin/mocha ./test/integration/**/servicebox-*.js"
   }
 }

@@ -45,8 +45,9 @@ function create(config) {
 /**
  * Create a server for test purpose, async initilializing it
  * and calling back when it is ready.
- * @param <Function> callback(err) called back when init is over; can be null
- * @return the Server instance, with initialization ongoing.
+ * The server is NOT bound to a TCP port, as test frameworks usually don't need this.
+ * @param <Function> callback(err, app) called back when init is over; can be null
+ * @return the express app
  */
 function test(config, callback) {
   if (callback && typeof callback != 'function') throw new Error('invalid callback');
@@ -58,9 +59,9 @@ function test(config, callback) {
       if (callback) return callback(err);
       else console.error(err.stack, err);
     }
-    if (callback) callback(null);
+    if (callback) callback(null, server.app);
   });
-  return server;
+  return server.app;
 };
 
 /**
@@ -73,7 +74,7 @@ function test(config, callback) {
  * @return a Server instance, ready for initServer() and bind() calls.
  */
 function Server(config) {
-  this._app    = express();
+  this.app    = express();
   this._config = config;
   if (!this._config) this._config = require('config');
 };
@@ -93,15 +94,15 @@ Server.prototype.initServer = function initServer(callback) {
   var backendOpts = _this._config.get('backend.options');
 
   _this._log.debug('init backend...');
-  var backend_factory = require('./backend_factory');
+  var Backend = require('./backend_factory');
   if (backendOpts) {
     backendOpts = JSON.parse(backendOpts);
   }
-  backend_factory.create(backendType, backendOpts, function init_backend_callback(err, backend) {
+  Backend.create(backendType, backendOpts, function init_backend_callback(err, backend) {
     if (err) return callback(err);
 
     // Ensure the backend instance will be in the context of all requests
-    _this._app.use(function(req, res, next){
+    _this.app.use(function(req, res, next){
       req.locals = {
         backend: backend
       };
@@ -118,7 +119,7 @@ Server.prototype.initServer = function initServer(callback) {
       if (err) return callback(err);
 
       // install middleware
-      swaggerExpress.register(_this._app);
+      swaggerExpress.register(_this.app);
 
       callback(null);
     });
@@ -133,9 +134,9 @@ Server.prototype.bindHttp = function bindHttp(callback) {
   var _this = this;
   var port = this._config.get('http.port');
   _this._log.debug('binding port %d...', port);
-  _this._app.listen(port, function app_listen_callback(err) {
+  _this.app.listen(port, function app_listen_callback(err) {
     if (err) return callback(err);
-    _this._log.warn('server listening on port %d in %s mode', port, _this._app.settings.env);
+    _this._log.warn('server listening on port %d in %s mode', port, _this.app.settings.env);
     callback(null);
   });
 }
