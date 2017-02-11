@@ -13,4 +13,4 @@ coverage
 build/Release
 node_modules
 .serverless
-./apache-cassandra-*
+apache-cassandra-*
