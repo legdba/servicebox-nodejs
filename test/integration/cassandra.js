@@ -24,133 +24,65 @@
 const events = require('events');
 const timers = require('timers');
 const spawn = require('child_process').spawn;
+const dbproc = require('./dbproc');
 var CassendraBackend = require('../../app/api/helpers/cassandra_backend');
 
 module.exports = function(fn) {
   return new CassandraCLIWrapper(fn);
 };
 
-function CassandraCLIWrapper(fn) {
-  this._fn = fn;
-  this._tti = 20000;
+function CassandraCLIWrapper(fn, tti) {
+  this._process = dbproc.create({
+    marker: 'Not starting RPC server as requested. Use JMX',
+    fn: fn,
+    opts: ['-f'],
+    okcodes: [128, 129],
+    tti: tti || 20000
+  });
 };
 
 CassandraCLIWrapper.prototype.constructor = CassandraCLIWrapper;
 
-CassandraCLIWrapper.prototype.getReady = function getReady(callback) {
+CassandraCLIWrapper.prototype.run = function run(callback) {
   if(typeof callback !== 'function') throw new Error('invalid callback');
   var _this = this;
-  _this.startAndInit()
-    .once('error', function(err) {
-      cassandra.stop();
-      if (callback) callback(err);
-      callback = null; // ensure a single callback
-      return;
-    })
-    .once('exit', function(code, stdout, stderr) {
-      if (code !== 0 && code !== 129 && code !== 130) {
-        console.error(stdout + stderr);
-        if (callback) callback(new Error('cassandra terminated with unexpected code: ' + code));
-        callback = null; // ensure a single callback
-        return;
-      }
 
-    })
-    .once('ready', function() {
-      if (callback) callback(null);
-      callback = null; // ensure a single callback
-      return;
-    });
-};
-
-/**
- * Starts cassandra server and re-provision keyspace and table.
- * Pre-existing data will be lost.
- * The following events can be listened:
- * - .on('up', function()): cassandra is up and running; emitted once
- * - .on('ready', function()): cassandra is up and running and it's keyspace has been provisionned; emitted once
- * - .on('exit', function(code)): cassandra exited with status code 'code'; emitted once
- * - .on('error', function(err)): error; can be emitted several times
- * @return this to allow chaining event listening
- */
-CassandraCLIWrapper.prototype.startAndInit = function startAndInit() {
-  var _this = this; // use _this as this will get lost on emitter callback sections
-  if (_this._child)  throw new Error('Cassandra is already running');
-
-  _this.start()
+  _this._process.start()
   .once('up', function() {
     var be = CassendraBackend.create({contactPoints: ['localhost:9042']});
     be.connect(function(err) {
-      if (err) return _this.emit('error', err);
+      if (err) {
+        if (callback) callback(err);
+        callback = null; // ensure a single callback call
+        return;
+      }
       be.dropAndCreateKeyspace(function(err) {
-        if (err) return _this.emit('error', err);
-        _this.emit('ready');
+        if (err) {
+          if (callback) callback(err);
+          callback = null; // ensure a single callback call
+          return;
+        }
+        if (callback) callback(null);
+        callback = null; // ensure a single callback call
+        return;
       });
     });
+  })
+  .once('exit', function(code, stdout, stderr) {
+    console.log('process exited: %s', code);
+    console.log(stdout);
+    console.log(stderr);
+    if (callback) callback(null);
+    callback = null; // ensure a single callback call
+    return;
+  })
+  .on('error', function(err) {
+    if (callback) callback(err);
+    callback = null; // ensure a single callback call
+    return;
   });
-  return _this;
-};
-
-/**
- * Start cassandra without provisionning key space and table
- * @see startAndInit
- */
-CassandraCLIWrapper.prototype.start = function start() {
-  var _this = this; // use _this as this will get lost on emitter callback sections
-  if (_this._child)  throw new Error('Cassandra is already running');
-
-  _this._timeout = timers.setTimeout(function() {
-    _this.stop();
-    _this.emit('error', new Error('timeout on cassandra startup'));
-  }, _this._tti);
-
-  _this._child = spawn(_this._fn, ['-f']);
-
-  _this.stdout = "";
-  _this._child.stdout.on('data', function(chunk) {
-    var str = chunk.toString();
-    _this.stdout = _this.stdout + str;
-    if (str.indexOf('Not starting RPC server as requested. Use JMX') > -1) {
-      if (_this._timeout) {
-        timers.clearTimeout(_this._timeout);
-        _this._timeout = null;
-      }
-      _this.emit('up');
-    }
-  });
-
-  _this.stderr = "";
-  _this._child.stderr.on('data', function(chunk) {
-    _this.stderr = _this.stderr + chunk.toString();
-  });
-
-  _this._child.once('exit', function(code) {
-    if (_this._timeout) {
-      timers.clearTimeout(_this._timeout);
-      _this._timeout = null;
-    }
-    _this.emit('exit', code, _this.stdout, _this.stderr);
-    _this._child = null;
-    _this.stdout = "";
-    _this.stderr = "";
-  });
-
-  return _this;
 };
 
 CassandraCLIWrapper.prototype.stop = function stop() {
-  var _this = this; // use _this as this will get lost on emitter callback sections
-  if (_this._timeout) {
-    timers.clearTimeout(_this._timeout);
-    _this._timeout = null;
-  }
-  if (_this._child) {
-    _this._child.kill('SIGHUP');
-    _this._child = null;
-  } else {
-    //Cassandra is already stopped
-  }
-  return _this;
+  this._process.stop();
 };
-
-CassandraCLIWrapper.prototype.__proto__ = events.EventEmitter.prototype;

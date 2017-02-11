@@ -29,16 +29,17 @@ lugg.init({level: 'warn'});
 
 var Server = require('../../app/server');
 var Cassandra = require('./cassandra');
-var cassandra = Cassandra('./apache-cassandra-2.2.8/bin/cassandra');
 var Backend = require('../../app/api/helpers/cassandra_backend');
 var app;
 var backend;
 
 describe('when cassandra starts', function() {
 
+  var cassandra = Cassandra('./apache-cassandra-2.2.8/bin/cassandra');
+
   before(function(done) {
     this.timeout(20000);
-    cassandra.getReady(function(err) {
+    cassandra.run(function(err) {
       if (err) return done(err);
       backend = Backend.create();
       backend.bind(function(err) {
