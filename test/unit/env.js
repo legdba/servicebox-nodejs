@@ -24,7 +24,7 @@ var expect = require('chai').expect;
 var request = require('supertest');
 var lugg = require('lugg');
 lugg.init({level:'warn'});
-var app = require('../../app/server').test();
+var app = require('../../app/server').test().app;
 
 process.env.A127_ENV = 'test';
 

@@ -69,8 +69,8 @@ CassandraBackend.prototype.connect = function connect(callback) {
     var _this = this;
 
     log.debug('contacting Cassandra cluster at %j', _this._config);
-    _this.client = new cassandra.Client(_this._config);
-    _this.client.connect(function connectCassandraCallback(err) {
+    _this._client = new cassandra.Client(_this._config);
+    _this._client.connect(function connectCassandraCallback(err) {
       if (err) {
         log.debug('Cassandra connection failed: %s', err);
         return callback(err);
@@ -85,7 +85,10 @@ CassandraBackend.prototype.connect = function connect(callback) {
  * Disconnect from cassandra.
  */
 CassandraBackend.prototype.disconnect = function disconnect(callback) {
+  if (typeof callback != 'function') throw new Error('invalid callback');
   this.client.shutdown();
+  _this._client = null;
+  callback(null);
   return this;
 }
 
@@ -96,6 +99,7 @@ CassandraBackend.prototype.disconnect = function disconnect(callback) {
 CassandraBackend.prototype.healthcheck = function healthcheck(callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
+  if (!_this._client) throw new Error('not connected');
   log.debug('health-checking Cassandra...');
   CassandraBackend.prototype.addAndGet.apply(_this, [0, 0, function checkCassandraCallback(err, new_counter) {
     if(err) {
@@ -111,20 +115,22 @@ CassandraBackend.prototype.healthcheck = function healthcheck(callback) {
 CassandraBackend.prototype.dropAndCreateKeyspace = function dropAndCreateKeyspace(callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
+  if (!_this._client) throw new Error('not connected');
   var q = util.format("DROP KEYSPACE IF EXISTS calc");
   log.debug('CQL query:', q);
-  _this.client.execute(q, function (err, results) {
+  _this._client.execute(q, function (err, results) {
       if (err) return callback(err);
       var q = util.format("CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false");
       log.debug('CQL query:', q);
-      _this.client.execute(q, function (err, results) {
+      _this._client.execute(q, function (err, results) {
+        if (err) return callback(err);
+        var q = util.format("CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id))");
+        log.debug('CQL query:', q);
+        _this._client.execute(q, function execute(err, results) {
+          log.debug('CQL result(s): ', results);
           if (err) return callback(err);
-          var q = util.format("CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id))");
-          log.debug('CQL query:', q);
-          _this.client.execute(q, function execute(err, results) {
-              if (err) return callback(err);
-              return callback(null);
-          });
+          return callback(null);
+        });
       });
   });
   return _this;
@@ -137,6 +143,7 @@ CassandraBackend.prototype.dropAndCreateKeyspace = function dropAndCreateKeyspac
 CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
+  if (!_this._client) throw new Error('not connected');
   _this.add(id, number, function add(err, results) {
     if (err) return callback(err);
     _this.get(id, function get(err, new_counter) {
@@ -149,26 +156,33 @@ CassandraBackend.prototype.addAndGet = function addAndGet(id, number, callback) 
 CassandraBackend.prototype.add = function add(id, number, callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
+  if (!_this._client) throw new Error('not connected');
+  log.debug('adding %s to counter %s', number, id);
   var q = util.format("UPDATE calc.sum SET sum=sum+%s WHERE id='%s'", number, id);
-  log.debug('CQL query:', q);
-  _this.client.execute(q, function execute(err, results) {
-     if (err) return callback(err);
-     callback(null, results);
+  log.debug('CQL query: ', q);
+  _this._client.execute(q, function execute(err, results) {
+    log.debug('CQL result(s): ', results);
+    if (err) return callback(err);
+    callback(null, results);
   });
 };
 
 CassandraBackend.prototype.get = function get(id, callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
+  if (!_this._client) throw new Error('not connected');
+  log.debug('getting counter %s', id);
   var q = util.format("SELECT * FROM calc.sum WHERE id='%s'", id);
   log.debug('CQL query:', q);
-  _this.client.execute(q, function cqslExecCallback(err, results) {
+  _this._client.execute(q, function cqslExecCallback(err, results) {
       if (err) return callback(err);
       log.debug('CQL result(s):', results);
       if ( !results || !results.rows[0] ) {
-          return callback(new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id));
+        return callback(new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id));
       } else {
-          return callback(null, parseInt(results.rows[0].sum, 10) );
+        var n = parseInt(results.rows[0].sum, 10);
+        log.debug('counter %s = %s', id, n);
+        return callback(null, n );
       }
   });
 };

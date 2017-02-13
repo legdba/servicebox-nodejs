@@ -1,7 +1,0 @@
-log:
-  level: warn
-http:
-  port: 8080
-backend:
-  type: memory
-  options: ""

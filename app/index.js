@@ -30,7 +30,7 @@ var BackendFactory = require('./backend_factory');
  * @return log instance
  */
 var initLogs = function initLogs(config) {
-  var loglevel = config.get('log.level');
+  var loglevel = config.loglevel;
   lugg.init({level: loglevel});
   var log = lugg('servicebox');
   log.debug('DEBUG enabled');
@@ -45,28 +45,46 @@ var initLogs = function initLogs(config) {
  * @return node-config instance
  */
 var getConfig = function getConfig() {
-  // Read CLI args
-  var CRLS="\n              ";
-  var opt = require('node-getopt').create([
-    ['p' , 'port=PORT'       , 'http server port; default=8080'],
-    ['l' , 'log-level=LOGLEVEL'  , 'log level (debug|info|warn|error); default=info'],
-    ['b' , 'be-type=TYPE'    , 'backend type (' + BackendFactory.list().join('|') + '); default=memory'+CRLS+'  memory:'+CRLS+'  Use local memory as a backend; application is then statefull and'+CRLS+'  cannot be used to test 12-factor-app type of dpeloyemnt.'+CRLS+'  cassandra'+CRLS+'  use a cassandra cluster as a backed, providing real state-less processing and 12-factor-app deployment'],
-    ['o' , 'be-opts=OPTS'    , 'backend connection options; depends on type.'+CRLS+'  memory:'+CRLS+'  ignore any --be-opts value.'+CRLS+'  cassandra:'+CRLS+'  contactPoints string as per https://github.com/datastax/java-driver;'+CRLS+'  example: --be-opts \'"{contactPoints":["46.101.16.49","178.62.108.56"]}\''],
-    ['h' , 'help'        , 'display this help'],
-  ])
-  .bindHelp()
-  .parseSystem();
+  var argv = require('yargs')
+  .usage('Usage: $0 [option..]')
+  .example('$0 --loglevel=debug --betype=memory', 'starts in debug with an in-memory backend')
+  .example('')
+  .example('$0 --betype=cassandra --beopts=\'{"contactPoints": ["localhost:9042"]}\'', 'starts with a cassandra backend configured with a single local node on port 9042')
+  .showHelpOnFail(true, 'Specify --help for available options')
+  .help('h')
+  .alias('h', 'help')
+  .option('port', {
+    alias: ['p'],
+    describe: 'http port for the server to bind to; can also be set with env variable SB_PORT',
+    type: 'number',
+    default: 8080
+  })
+  .option('loglevel', {
+    alias: ['l'],
+    describe: 'log level; can also be set with env variable SB_LOGLEVEL',
+    type: 'string',
+    choices: ['debug', 'info', 'warn', 'error'],
+    default: 'warn'
+  })
+  .option('betype', {
+    alias: ['b'],
+    describe: 'backend type, for statefull operations; can also be set with env variable SB_BETYPE',
+    type: 'string',
+    choices: BackendFactory.list(),
+    default: BackendFactory.list()[0]
+  })
+  .option('beopts', {
+    alias: ['o'],
+    describe: 'json configuration string for the selected backend; can also be set with env variable SB_BEOPTS',
+  })
+  .coerce({
+    'beopts': JSON.parse
+  })
+  .env('SB')
+  .strict()
+  .argv;
 
-  // Get Node config overriten by env variables
-  var config = require('config');
-
-  // Override with CLI arguments:
-  if (opt.options['log-level']) config.log.level       = opt.options['log-level'];
-  if (opt.options.port)         config.http.port       = opt.options.port;
-  if (opt.options['be-type'])   config.backend.type    = opt.options['be-type'];
-  if (opt.options['be-opts'])   config.backend.options = opt.options['be-opts'];
-
-  return config;
+  return argv;
 }
 
 /**
@@ -85,6 +103,7 @@ if(require.main === module) {
   d.run(function run() {
     var config = getConfig();
     var log = initLogs(config);
+    log.debug('config: %j', config);
 
     var Server = require('./server');
     var server = Server.create(config);

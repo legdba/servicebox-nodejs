@@ -25,7 +25,7 @@ var should = require('chai').should;
 var expect = require('chai').expect;
 var request = require('supertest');
 var lugg = require('lugg');
-lugg.init({level: 'warn'});
+lugg.init({level: 'error'});
 
 var Server = require('../../app/server');
 var Cassandra = require('./cassandra');
@@ -35,11 +35,11 @@ var backend;
 
 describe('when cassandra starts', function() {
 
-  var cassandra = Cassandra('./apache-cassandra-2.2.8/bin/cassandra');
+  var db = Cassandra('./apache-cassandra-2.2.8/bin/cassandra');
 
   before(function(done) {
     this.timeout(20000);
-    cassandra.run(function(err) {
+    db.run(function(err) {
       if (err) return done(err);
       backend = Backend.create();
       backend.bind(function(err) {
@@ -53,9 +53,9 @@ describe('when cassandra starts', function() {
 
     it('it should bind to cassandra', function(done) {
       this.timeout(5000);
-      Server.test(null, function(err, appx) {
+      Server.test({'betype':'cassandra'}, function(err, server) {
         if (err) return done(err);
-        app = appx;
+        app = server.app;
         done();
       });
     });
@@ -63,32 +63,32 @@ describe('when cassandra starts', function() {
   });
 
   it('there should be calc.sum.id[0]={counter:0} into cassandra', function(done) {
-    backend.addAndGet('1', 0, function(err, new_counter) { // a get(1) would fail as there is no entry...
+    backend.addAndGet('0', 0, function(err, data) { // a get(1) would fail as there is no entry...
       if (err) return done(err);
-      expect(new_counter).to.equal(0);
+      expect(data).to.equal(0);
       done();
     });
   });
 
-  describe('GET /api/v2/calc/sum/1/42', function() {
+  describe('GET /api/v2/calc/sum/0/42', function() {
 
     it('should return return value 42', function() {
       request(app)
-      .get('/api/v2/calc/sum/1/42')
+      .get('/api/v2/calc/sum/0/42')
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(200)
       .end(function(err, res) {
         should.not.exist(err);
-        res.body.should.eql({id:'1', value:42});
+        res.body.should.eql({id:'0', value:42});
         done();
       });
     });
 
-    it('there should be calc.sum.id[0]={counter:42} into cassandra', function() {
-      backend.get('1', function(err, data) {
+    it('there should be calc.sum.id[0]={counter:42} into cassandra', function(done) {
+      backend.get('0', function(err, data) {
         if (err) return done(err);
-        expect(new_counter).to.equal(42);
+        expect(data).to.equal(42);
         done();
       });
     });
@@ -96,7 +96,7 @@ describe('when cassandra starts', function() {
   });
 
   after(function(done) {
-    cassandra.stop();
+    db.stop();
     done();
   });
 

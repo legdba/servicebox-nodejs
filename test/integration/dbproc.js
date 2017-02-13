@@ -32,6 +32,7 @@ module.exports = {
 };
 
 function DBProcessCLIWrapper(opts) {
+  this._marker = opts.marker,
   this._fn = opts.fn;
   this._opts = opts.opts || [];
   this._ok_exit_codes = opts.okcodes || [0];
@@ -50,20 +51,20 @@ DBProcessCLIWrapper.prototype.constructor = DBProcessCLIWrapper;
  */
 DBProcessCLIWrapper.prototype.start = function start() {
   var _this = this; // use _this as this will get lost on emitter callback sections
-  if (_this._child)  throw new Error('Cassandra is already running');
+  if (_this._child)  throw new Error('process is already running');
 
   _this._timeout = timers.setTimeout(function() {
     _this.stop();
-    _this.emit('error', new Error('timeout on cassandra startup'));
+    _this.emit('error', new Error('timeout on process startup'), _this.stdout, _this.stderr);
   }, _this._tti);
 
-  _this._child = spawn(_this._fn, ['-f']);
+  _this._child = spawn(_this._fn, _this._opts);
 
   _this.stdout = "";
   _this._child.stdout.on('data', function(chunk) {
     var str = chunk.toString();
     _this.stdout = _this.stdout + str;
-    if (str.indexOf('Not starting RPC server as requested. Use JMX') > -1) {
+    if (str.indexOf(_this._marker) > -1) {
       if (_this._timeout) {
         timers.clearTimeout(_this._timeout);
         _this._timeout = null;

@@ -49,7 +49,7 @@ CassandraCLIWrapper.prototype.run = function run(callback) {
 
   _this._process.start()
   .once('up', function() {
-    var be = CassendraBackend.create({contactPoints: ['localhost:9042']});
+    var be = CassendraBackend.create();
     be.connect(function(err) {
       if (err) {
         if (callback) callback(err);

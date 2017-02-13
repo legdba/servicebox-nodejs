@@ -26,7 +26,7 @@ var expect = require('chai').expect;
 var request = require('supertest');
 var lugg = require('lugg');
 lugg.init({level:'warn'});
-var app = require('../../app/server').test();
+var app = require('../../app/server').test().app;
 var MemoryBackend = require('../../app/api/helpers/memory_backend');
 
 

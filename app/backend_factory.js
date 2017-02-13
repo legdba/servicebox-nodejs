@@ -26,7 +26,7 @@ const backend_factories = {
   'cassandra'     : require('./api/helpers/cassandra_backend'),
   //'redis-cluster' : require('./api/helpers/rediscluster_backend'),
   //'redis-sentinel': require('./api/helpers/redissentinel_backend'),
-  //'dynamodb'      : require('./api/helpers/dynamodb_backend'),
+  'dynamodb'      : require('./api/helpers/dynamodb_backend'),
 }
 
 /**
@@ -46,6 +46,7 @@ module.exports.list = function list() {
  */
 module.exports.create = function create(type, opts, callback) {
   if (typeof callback !== 'function') throw new Error('invalid callback');
+  type = type || this.list()[0];
   if (backend_factories.hasOwnProperty(type)) {
     var backend_factory = backend_factories[type];
     var be = backend_factory.create(opts);
