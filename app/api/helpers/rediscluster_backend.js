@@ -20,16 +20,22 @@
  */
 'use strict';
 
-var makeClass = require('./make_class');
 var util = require('util');
 var lugg = require('lugg');
-var log = lugg('rediscluster-clt');
 var Redis = require('ioredis');
+var log;
 
-var RedisClusterBackend = makeClass.makeClass();
-exports.RedisClusterBackend = RedisClusterBackend;
+module.exports = {
+  create: function create(jsoncfg) {
+    if (!log) log = lugg('rediscluster-clt');
+    return new RedisClusterBackend(jsoncfg);
+  }
+};
 
-RedisClusterBackend.prototype.constructor = function() {};
+function RedisClusterBackend(jsoncfg) {
+  this._config = jsoncfg || {"drivercfg":[{"host":"localhost","port":"6379"}]};
+};
+RedisClusterBackend.prototype.constructor = RedisClusterBackend;
 
 /**
  * Connect Redis cluster backend.
@@ -47,10 +53,10 @@ RedisClusterBackend.prototype.constructor = function() {};
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
  * The RedisClusterBackend is ready to be used as soon as the calllback has been called with a success.
  */
-RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
-    var self = this;
-    jsoncfg = jsoncfg || {"drivercfg":[{"host":"localhost","port":"6379"}]};
-    var cfg = jsoncfg.drivercfg;
+RedisClusterBackend.prototype.bind = function bind(callback) {
+    if (typeof callback !== 'function') throw new Error('invalid callback');
+    var _this = this;
+    var cfg = _this._config.drivercfg;
 
     // NOTE regarding ioredis behavior:
     // By default ioredis will try to connect to the cluster forever, suspending any ongoing request
@@ -60,20 +66,20 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
     // any request will fail immediatly without retry which sounds better.
     // TODO: test if this cause errors upon a single master node failure.
     log.debug("Contacting Redis Cluster at " + JSON.stringify(cfg));
-    self.cluster = new Redis.Cluster(cfg, {enableOfflineQueue:false});
+    _this.cluster = new Redis.Cluster(cfg, {enableOfflineQueue:false});
 
     var redisInitErrorCallback = function redisInitCallback(err) {
         callback(err);
     };
 
-    self.cluster
+    _this.cluster
     .once('error', redisInitErrorCallback)
     .once('ready', function redisInitReadyCallback(stream) {
         // Remove existing event handler and setup new ones to logs cluster state changes
         // (we don't want the .once('error',...) event handler below to do a callback later on upon error
         //  while we have already setup the backend connection once and did a callback)
-        self.cluster.removeListener('error', redisClusterInitErrorCallback);
-        self.cluster.on('error', function redisClusterErrorCallback(err) {
+        _this.cluster.removeListener('error', redisClusterInitErrorCallback);
+        _this.cluster.on('error', function redisClusterErrorCallback(err) {
             log.warn('redis-cluster error: %s', err);
         }).on('connect', function redisClusterConnectCallback(stream) {
             log.warn('redis-cluster connected: %s', stream);
@@ -88,7 +94,7 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
         });
         // Test cluster
         log.info('testing backend with a sum(\'0\', 0) request...');
-        self.addAndGet('0', 0, function incrCallback(err, result) {
+        _this.addAndGet('0', 0, function incrCallback(err, result) {
             if (err) { callback(err); }
             log.info("counter: " + result);
             log.info('backend test passed');
@@ -102,11 +108,13 @@ RedisClusterBackend.prototype.init = function init(jsoncfg, callback) {
  * @param callback Executes callback(err, new_counter) with err set upon error and with new_counter upon success
  */
 RedisClusterBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
-    this.cluster.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
-        if (err) {
-            if (callback) { callback(err); }
-        } else {
-            if (callback) { callback(null, result); }
-        }
-    });
+  if (typeof callback !== 'function') throw new Error('invalid callback');
+  var _this = this;
+  this.cluster.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
+    if (err) {
+      if (callback) { callback(err); }
+    } else {
+      if (callback) { callback(null, result); }
+    }
+  });
 };

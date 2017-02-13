@@ -24,8 +24,8 @@
 const backend_factories = {
   'memory'        : require('./api/helpers/memory_backend'),
   'cassandra'     : require('./api/helpers/cassandra_backend'),
-  //'redis-cluster' : require('./api/helpers/rediscluster_backend'),
-  //'redis-sentinel': require('./api/helpers/redissentinel_backend'),
+  'redis-cluster' : require('./api/helpers/rediscluster_backend'),
+  'redis-sentinel': require('./api/helpers/redissentinel_backend'),
   'dynamodb'      : require('./api/helpers/dynamodb_backend'),
 }
 

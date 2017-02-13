@@ -20,16 +20,22 @@
  */
 'use strict';
 
-var makeClass = require('./make_class');
 var util = require('util');
 var lugg = require('lugg');
-var log = lugg('redissentinel-clt');
 var Redis = require('ioredis');
+var log;
 
-var RedisSentinelBackend = makeClass.makeClass();
-exports.RedisSentinelBackend = RedisSentinelBackend;
+module.exports = {
+  create: function create(jsoncfg) {
+    if (!log) log = lugg('redissentinel-clt');
+    return new RedisSentinelBackend(jsoncfg);
+  }
+};
 
-RedisSentinelBackend.prototype.constructor = function() {};
+function RedisSentinelBackend(jsoncfg) {
+  this._config = jsoncfg || {"drivercfg":{sentinels:[{host:"localhost", port:26379}], "name":"mymaster"}};
+}
+RedisSentinelBackend.prototype.constructor = RedisSentinelBackend;
 
 /**
  * Connect Redis Sentinel group.
@@ -49,10 +55,10 @@ RedisSentinelBackend.prototype.constructor = function() {};
  * @param callback Executes callback(err) with err set upon failure, with err set to null upon success.
  * The RedisSentinelBackend is ready to be used as soon as the calllback has been called with a success.
  */
-RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
-    var self = this;
-    jsoncfg = jsoncfg || {"drivercfg":{sentinels:[{host:"localhost", port:26379}], "name":"mymaster"}};
-    var cfg = jsoncfg.drivercfg;
+RedisSentinelBackend.prototype.bind = function bind(callback) {
+    if (typeof callback !== 'function') throw new Error('invalid callback');
+    var _this = this;
+    var cfg = _this._config.drivercfg;
 
     // NOTE regarding ioredis behavior:
     // By default ioredis will try to connect to the group forever, suspending any ongoing request
@@ -61,20 +67,20 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
     // The implementation below is forcing enableOfflineQueue:false. This means that if the group is offline
     // any request will fail immediatly without retry which sounds better.
     log.debug("Contacting Redis Sentinel group at " + JSON.stringify(cfg));
-    self.redis = new Redis(cfg, {enableOfflineQueue:false});
+    _this.redis = new Redis(cfg, {enableOfflineQueue:false});
 
     var redisInitErrorCallback = function redisInitCallback(err) {
-        callback(err);
+        return callback(err);
     };
 
-    self.redis
+    _this.redis
     .once('error', redisInitErrorCallback)
     .once('ready', function redisInitReadyCallback(stream) {
         // Remove existing event handler and setup new ones to logs redis state changes
         // (we don't want the .once('error',...) event handler below to do a callback later on upon error
         //  while we have already setup the backend connection once and did a callback)
-        self.redis.removeListener('error', redisInitErrorCallback);
-        self.redis.on('error', function redisErrorCallback(err) {
+        _this.redis.removeListener('error', redisInitErrorCallback);
+        _this.redis.on('error', function redisErrorCallback(err) {
             log.warn('redis error: %s', err);
         }).on('connect', function redisConnectCallback(stream) {
             log.warn('redis connected: %s', stream);
@@ -89,11 +95,11 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
         });
         // Test Redis
         log.info('testing backend with a sum(\'0\', 0) request...');
-        self.addAndGet('0', 0, function incrCallback(err, result) {
-            if (err) { callback(err); }
+        _this.addAndGet('0', 0, function incrCallback(err, result) {
+            if (err) return callback(err);
             log.info("counter: " + result);
             log.info('backend test passed');
-            callback(null); // Redis is up and running, init() is done
+            return callback(null); // Redis is up and running, init() is done
         });
     });
 };
@@ -103,11 +109,10 @@ RedisSentinelBackend.prototype.init = function init(jsoncfg, callback) {
  * @param callback Executes callback(err, new_counter) with err set upon error and with new_counter upon success
  */
 RedisSentinelBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
-    this.redis.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
-        if (err) {
-            if (callback) { callback(err); }
-        } else {
-            if (callback) { callback(null, result); }
-        }
-    });
+  if (typeof callback !== 'function') throw new Error('invalid callback');
+  var _this = this;
+  this.redis.incrby('servicebox:calc:sum:'+id, number, function incrCallback(err, result) {
+    if (err) return callback(err);
+    return callback(null, result);
+  });
 };

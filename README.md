@@ -293,6 +293,8 @@ Get Swagger definition at http://yourhost:8080/api/v2/swagger (this will return 
 Debug log level will log backend configuration strings, including credentials. Make sure NOT to use debug where this is a security issue.
 
 # TODO
+* Add Redis-Sentinel integration tests
+* Add Redis-Cluster integration tests
 * Add txn logs
 * Add support for Cassandra cluster options (same as in servicebod-jaxrs)
 
