@@ -28,14 +28,14 @@ var lugg = require('lugg');
 lugg.init({level: 'error'});
 
 var Server = require('../../app/server');
-var Cassandra = require('./Cassandra');
-var Backend = require('../../app/api/helpers/cassandra_backend');
+var DynamoDB = require('./dynamodb');
+var Backend = require('../../app/api/helpers/dynamodb_backend');
 var app;
 var backend;
 
-describe('Servicebox + Cassandra smoke tests', function() {
+describe('Servicebox + DynamoDB smoke tests', function() {
 
-  var db = Cassandra('./apache-cassandra-2.2.8/bin/cassandra');
+  var db = DynamoDB('./dynamodb-latest');
 
   step('start DB and drop servicebox table if any', function(done) {
     this.timeout(20000);
@@ -49,10 +49,10 @@ describe('Servicebox + Cassandra smoke tests', function() {
     backend = Backend.create();
     backend.bind(function(err) {
       if (err) return done(err);
-      backend.addAndGet('test', 123, function(err, data) { // a get(1) would fail as there is no entry...
+      backend.addAndGet('mock', 123, function(err, data) { // a get(1) would fail as there is no entry...
         if (err) return done(err);
         expect(data).to.equal(123);
-        backend.get('test', function(er, data){
+        backend.get('mock', function(er, data){
           if (err) return done(err);
           expect(data).to.equal(123);
           done();
@@ -64,7 +64,7 @@ describe('Servicebox + Cassandra smoke tests', function() {
 
   step('start servicebox', function(done) {
     this.timeout(5000);
-    Server.test({'betype':'cassandra'}, function(err, server) {
+    Server.test({'betype':'dynamodb'}, function(err, server) {
       if (err) return done(err);
       app = server.app;
       done();

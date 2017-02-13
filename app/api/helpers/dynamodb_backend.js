@@ -74,9 +74,10 @@ DynamoDbBackend.prototype.healthcheck = function healthcheck(callback) {
   if (!_this._dynamodb) throw new Error('not connected');
   // validate connection and required table
   log.debug('contacting DynamoDB at %j', _this._jsoncfg);
+  log.debug('DynamoDB listTables request');
   _this._dynamodb.listTables(function(err, data) {
     if (err) return callback(err);
-    log.debug("reply: %j", data);
+    log.debug('DynamoDB listTables response: %j', data);
     if (data.hasOwnProperty('TableNames') &&
         data.TableNames.indexOf(_this._table) != -1) {
       log.info('DynamoDB check suceeded');
@@ -125,6 +126,10 @@ DynamoDbBackend.prototype.addAndGet = function addAndGet(id, number, callback) {
   return _this;
 };
 
+/**
+ * Get an entry by ID.
+ * @param callback(err, value); value is set to undefined if it does not exist
+ */
 DynamoDbBackend.prototype.get = function get(id, callback) {
   if (typeof callback !== 'function') throw new Error('invalid callback');
   var _this = this;
@@ -141,8 +146,13 @@ DynamoDbBackend.prototype.get = function get(id, callback) {
  _this._dynamodb.getItem(params, function(err, data) {
    if (err) return callback(err);
    log.debug('DynamoDB getItem response: %j', data);
-   var new_n = data.Item.id.S;
-   return callback(null, parseInt(new_n,10));
+   if (data.hasOwnProperty('Item')) {
+     var new_n = data.Item.n.N;
+     return callback(null, parseInt(new_n,10));
+   } else {
+     // no such entry in DB
+     return callback(null, undefined);
+   }
  });
 }
 
@@ -160,7 +170,7 @@ DynamoDbBackend.prototype.dropAndCreateTable = function dropAndCreateTable(callb
   return _this;
 };
 
-DynamoDbBackend.prototype.deleteTableIfAny = function dropAndCreateTable(callback) {
+DynamoDbBackend.prototype.deleteTableIfAny = function deleteTableIfAny(callback) {
   if (typeof callback !== 'function') throw new Error('invalid callback');
   var _this = this;
   if (!_this._dynamodb) throw new Error('not connected');
@@ -188,7 +198,7 @@ DynamoDbBackend.prototype.deleteTableIfAny = function dropAndCreateTable(callbac
   return _this;
 };
 
-DynamoDbBackend.prototype.createTable = function dropAndCreateTable(callback) {
+DynamoDbBackend.prototype.createTable = function createTable(callback) {
   if (typeof callback !== 'function') throw new Error('invalid callback');
   var _this = this;
   if (!_this._dynamodb) throw new Error('not connected');

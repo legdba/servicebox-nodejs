@@ -101,14 +101,14 @@ CassandraBackend.prototype.healthcheck = function healthcheck(callback) {
   var _this = this;
   if (!_this._client) throw new Error('not connected');
   log.debug('health-checking Cassandra...');
-  CassandraBackend.prototype.addAndGet.apply(_this, [0, 0, function checkCassandraCallback(err, new_counter) {
+  _this.addAndGet('healthcheck', 0, function checkCassandraCallback(err, new_counter) {
     if(err) {
       log.warn("Cassandra check failed; maybe Keyspace does not exist. If so, run the following command: CREATE KEYSPACE calc WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 } AND DURABLE_WRITES = false ; CREATE TABLE calc.sum (id varchar, sum counter, PRIMARY KEY(id)) ;");
       return callback(err);
     }
     log.debug("Cassandra check succeeded");
     return callback(null);
-  }]);
+  });
   return _this;
 };
 
@@ -167,6 +167,10 @@ CassandraBackend.prototype.add = function add(id, number, callback) {
   });
 };
 
+/**
+ * Get an entry by ID.
+ * @param callback(err, value); value is set to undefined if it does not exist
+ */
 CassandraBackend.prototype.get = function get(id, callback) {
   if (typeof callback != 'function') throw new Error('invalid callback');
   var _this = this;
@@ -178,11 +182,11 @@ CassandraBackend.prototype.get = function get(id, callback) {
       if (err) return callback(err);
       log.debug('CQL result(s):', results);
       if ( !results || !results.rows[0] ) {
-        return callback(new Error('empty results for: SELECT * FROM calc.sum WHERE id='+id));
+        return callback(null, undefined);
       } else {
         var n = parseInt(results.rows[0].sum, 10);
         log.debug('counter %s = %s', id, n);
-        return callback(null, n );
+        return callback(null, n);
       }
   });
 };
