@@ -27,6 +27,12 @@ var DynamoDbBackend = require('../../app/api/helpers/dynamodb_backend');
 var tester = require('../helpers/servicebox-with-db');
 var beopts = {'betype':'dynamodb'};
 
+// On some environments (such as CircleCI), not having the
+// following env variables set cause AWS SDK to raise
+// a "TimeoutError: Missing credentials in config".
+process.env.AWS_ACCESS_KEY_ID = 'anonymous';
+process.env.AWS_SECRET_ACCESS_KEY = 'secret';
+
 describe('Servicebox + DynamoDB smoke tests', function() {
     tester.serviceBoxWithDbSmokeTest(db, DynamoDbBackend, beopts);
   }
