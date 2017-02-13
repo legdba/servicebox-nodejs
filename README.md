@@ -160,7 +160,7 @@ The following environment variable can be set to configure servicebox while it r
 ```shell
 LOG_LEVEL="debug|info|warn|error"
 BACKEND_TYPE="memory|cassandra|redis-cluster|redis-sentinel|dynamodb"
-BACKEND_OPTIONS='same value as --be-opts, single-quote enclosed'
+BACKEND_OPTIONS='same value as --beopts, single-quote enclosed'
 ```
 
 Note that as of Feb-2017 AWS Lambda does not allow commas (',') in variable values. As a workaround servicebox replaces any ```=comma=``` into the BACKEND_OPTIONS value with a comma.
@@ -189,26 +189,26 @@ This is the default. No configuration needed.
 ### Cassandra
 To use cassandra as a backend add the following options:
 ```shell
---be-type=cassandra --be-opts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
+--betype=cassandra --beopts='{"contactPoints":["46.101.16.49","178.62.87.192"]}'
 ```
 Plain-text credentials can be set this way (no other credentials supported so far):
 ```shell
---be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "authProvider":{"type":"PlainTextAuthProvider", "username":"username", "password":"p@ssword"}}'
+--betype cassandra --beopts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "authProvider":{"type":"PlainTextAuthProvider", "username":"username", "password":"p@ssword"}}'
 ```
 Set load balancing policies:
 ```shell
---be-type cassandra --be-opts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
+--betype cassandra --beopts '{"contactPoints":["52.88.93.64","52.89.85.132","52.89.133.153"], "loadBalancingPolicy":{"type":"DCAwareRoundRobinPolicy","localDC":"DC_name_"}}'
 ```
 
-When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+When running as a lambda function, the same value as the ```--beopts``` can be set in ```SB_BEOPTIONS``` environment variable.
 
 ### Redis Cluster
 To use a redis cluster as a backend add the following options:
 ```shell
---be-type=redis-cluster --be-opts='{"drivercfg":[{"host":"localhost","port":"6379"}]}'
+--betype=redis-cluster --beopts='{"drivercfg":[{"host":"localhost","port":"6379"}]}'
 ```
 
-When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+When running as a lambda function, the same value as the ```--beopts``` can be set in ```SB_BEOPTIONS``` environment variable.
 
 The "drivercfg" JSON param is the IORedis client JSON connection object.
 Any IORedis config is supported. This is basically a list of of the cluster nodes
@@ -221,10 +221,10 @@ Note that the redis cluster client will try to connect to the cluster until it s
 ### Redis Sentinel
 To use a redis with sentinels as a backend add the following options:
 ```shell
---be-type=redis-sentinel --be-opts='{"drivercfg":{ "sentinels": [ {"host": "104.131.130.202", "port":26379}, {"host": "104.236.144.145", "port":26379}, {"host": "104.236.145.222", "port":26379} ], "name": "mymaster" }}'
+--betype=redis-sentinel --beopts='{"drivercfg":{ "sentinels": [ {"host": "104.131.130.202", "port":26379}, {"host": "104.236.144.145", "port":26379}, {"host": "104.236.145.222", "port":26379} ], "name": "mymaster" }}'
 ```
 
-When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+When running as a lambda function, the same value as the ```--beopts``` can be set in ```SB_BEOPTIONS``` environment variable.
 
 The "drivercfg" JSON param is the IORedis client JSON connection object.
 Any IORedis config is supported. This is basically a list of the sentinels to
@@ -238,16 +238,16 @@ Note that the redis client will try to connect to the groups until it succeeds.
 
 To use DynamoDB as a backend add the following options (make sure to replace value with your key, your secret and your region):
 ```shell
---be-type=dynamodb --be-opts='{"accessKeyId": "yourkey", "secretAccessKey": "yoursecret","region": "us-west-2", "apiVersion": "2012-08-10"}'
+--betype=dynamodb --beopts='{"accessKeyId": "yourkey", "secretAccessKey": "yoursecret","region": "us-west-2", "apiVersion": "2012-08-10"}'
 ```
 
-When running as a lambda function, the same value as the ```--be-opts``` can be set in ```BACKEND_OPTIONS``` environment variable.
+When running as a lambda function, the same value as the ```--beopts``` can be set in ```SB_BEOPTIONS``` environment variable.
 
 The DynamoDB shall have a ```servicebox``` table with a ```string``` ```id``` attribute as the primary key.
 
 A local DynamoDB can be used for testing with this sample set of options:
 ```shell
---be-type=dynamodb --be-opts='{"region":"us-west-2","apiVersion":"2012-08-10","endpoint":{"protocol":"http:","host":"localhost:8000","port":8000,"hostname":"localhost","pathname":"/","path":"/","href":"http://localhost:8000/"}}'
+--betype=dynamodb --beopts='{"region":"us-west-2","apiVersion":"2012-08-10","endpoint":{"protocol":"http:","host":"localhost:8000","port":8000,"hostname":"localhost","pathname":"/","path":"/","href":"http://localhost:8000/"}}'
 ```
 
 A local DynamoDB can be run this way:
