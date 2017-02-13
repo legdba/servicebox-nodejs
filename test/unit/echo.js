@@ -18,74 +18,79 @@
  # under the License.
  ##############################################################
  */
-var should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
-var lugg = require('lugg');
-var log = lugg('leak');
+ var should = require('should');
+ var expect = require('chai').expect;
+ var request = require('supertest');
+ var lugg = require('lugg');
+ lugg.init({level:'warn'});
+ var app = require('../../app/server').test().app;
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('leak', function() {
+  describe('echo', function() {
 
-    describe('GET /api/v2/heap/leak/1024', function() {
+    describe('POST /api/v2/echo', function() {
 
-      it('should leak 1024 bytes of heap for a total of 1024 when called 1st time', function(done) {
+      it('should echo passed Message body', function(done) {
 
         request(app)
-          .get('/api/v2/heap/leak/1024')
+          .post('/api/v2/echo')
           .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
+          .type('json')
+          .send(JSON.stringify({"message":"foo"}))
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({retainedHeap: 1024});
+            res.body.should.eql({message:'foo'});
             done();
           });
-      });
-
-      it('should leak 1024 bytes of heap for a total of 2048 when called 2nd time', function(done) {
-
-        request(app)
-          .get('/api/v2/heap/leak/1024')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({retainedHeap: 2048});
-            done();
-          });
-      });
-
-      it('should return 422 on invalid leak size', function(done) {
-
-        request(app)
-          .get('/api/v2/heap/leak/-1')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(422, done);
       });
 
     });
 
-    describe('GET /api/v2/heap/free', function() {
+    describe('GET /api/v2/echo/{message}', function() {
 
-      it('should release all retained (leaked) heap', function(done) {
+      it('should echo passed {message}', function(done) {
 
         request(app)
-          .get('/api/v2/heap/free')
+          .get('/api/v2/echo/foo')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({retainedHeap: 0});
+            res.body.should.eql({message:'foo'});
             done();
           });
+      });
+
+    });
+
+    describe('GET /api/v2/echo/{message}/{delay}', function() {
+
+      it('should echo passed {message}', function(done) {
+
+        request(app)
+          .get('/api/v2/echo/foo/1')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(200)
+          .end(function(err, res) {
+            should.not.exist(err);
+            res.body.should.eql({message:'foo'});
+            done();
+          });
+      });
+
+      it('should return 422 on negative {delay}', function(done) {
+
+        request(app)
+          .get('/api/v2/echo/foo/-1')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(422, done);
       });
 
     });

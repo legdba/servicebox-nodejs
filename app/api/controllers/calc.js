@@ -26,7 +26,7 @@ module.exports = {
 
 //var util = require('util');
 var lugg = require('lugg');
-var log = lugg('log');
+var log = lugg('calc');
 
 function calcFiboNth(num) {
     if (num > 2) {
@@ -59,6 +59,7 @@ function sum(req, res) {
         res.status(500).json({message: 'backend is null'});
         return;
     }
+    log.debug('sum/id:%s/n:%s', id, n);
     backend.addAndGet(id, n, function addAndGetCallback(err, new_counter) {
         if (err) {
             log.error(err, 'failed to increase counter %s by %d : %s', id, n, err);

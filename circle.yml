@@ -3,6 +3,20 @@ machine:
     version: 4.3.2 # AWS Lambda compatibility
 test:
   override:
-    - mocha app/test/**/*.js --reporter mocha-junit-reporter:
+    # Unit tests
+    - npm run test -- --reporter mocha-junit-reporter:
         environment:
           MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
+    # Integration tests
+    - npm run test-integration --reporter mocha-junit-reporter:
+        environment:
+          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
+dependencies:
+  cache_directories:
+    - apache-cassandra-2.2.8
+    #- redis-3.2.7
+    - dynamodb-latest
+  pre:
+    - if [[ ! -e apache-cassandra-2.2.8 ]]; then curl http://apache.mirror.globo.tech/cassandra/2.2.8/apache-cassandra-2.2.8-bin.tar.gz | tar -xvz; fi
+    #- if [[ ! -e redis-3.2.7/src/redis-server ]]; then curl http://download.redis.io/releases/redis-3.2.7.tar.gz | tar -xvz && cd redis-3.2.7 && make && make test; fi
+    - if [[ ! -e dynamodb-latest/DynamoDBLocal.jar ]]; then mkdir -p dynamodb-latest && cd dynamodb-latest && curl http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz | tar -xvz; fi

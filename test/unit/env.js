@@ -18,77 +18,70 @@
  # under the License.
  ##############################################################
  */
-var should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
+var os = require('os');
+var should = require('should');
+var expect = require('chai').expect;
+var request = require('supertest');
+var lugg = require('lugg');
+lugg.init({level:'warn'});
+var app = require('../../app/server').test().app;
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('echo', function() {
+  describe('env', function() {
 
-    describe('POST /api/v2/echo', function() {
+    describe('GET /api/v2/env/vars', function() {
 
-      it('should echo passed Message body', function(done) {
+      it('should return current OS environment variables', function(done) {
 
         request(app)
-          .post('/api/v2/echo')
+          .get('/api/v2/env/vars')
           .set('Accept', 'application/json')
-          .type('json')
-          .send(JSON.stringify({"message":"foo"}))
+          .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({message:'foo'});
+            expect(res.body).to.deep.equal(process.env);
             done();
           });
       });
 
     });
 
-    describe('GET /api/v2/echo/{message}', function() {
+    describe('GET /api/v2/env/vars/{name}', function() {
 
-      it('should echo passed {message}', function(done) {
+      it('should return {name} current OS environment variable', function(done) {
 
         request(app)
-          .get('/api/v2/echo/foo')
+          .get('/api/v2/env/vars/PATH')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({message:'foo'});
+            res.body.should.eql({PATH: process.env['PATH']});
             done();
           });
       });
 
     });
 
-    describe('GET /api/v2/echo/{message}/{delay}', function() {
+    describe('GET /api/v2/env/hostname', function() {
 
-      it('should echo passed {message}', function(done) {
+      it('should return {hostname} of current OS environment', function(done) {
 
         request(app)
-          .get('/api/v2/echo/foo/1')
+          .get('/api/v2/env/hostname')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({message:'foo'});
+            res.body.should.eql({hostname: os.hostname()});
             done();
           });
-      });
-
-      it('should return 422 on negative {delay}', function(done) {
-
-        request(app)
-          .get('/api/v2/echo/foo/-1')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(422, done);
       });
 
     });

@@ -21,19 +21,19 @@
 
 'use strict';
 
-const backend_types = {
-  'memory'        : require('./api/helpers/memory_backend').MemoryBackend(),
-  'cassandra'     : require('./api/helpers/cassandra_backend').CassandraBackend(),
-  'redis-cluster' : require('./api/helpers/rediscluster_backend').RedisClusterBackend(),
-  'redis-sentinel': require('./api/helpers/redissentinel_backend').RedisSentinelBackend(),
-  'dynamodb'      : require('./api/helpers/dynamodb_backend').DynamoDbBackend(),
+const backend_factories = {
+  'memory'        : require('./api/helpers/memory_backend'),
+  'cassandra'     : require('./api/helpers/cassandra_backend'),
+  'redis-cluster' : require('./api/helpers/rediscluster_backend'),
+  'redis-sentinel': require('./api/helpers/redissentinel_backend'),
+  'dynamodb'      : require('./api/helpers/dynamodb_backend'),
 }
 
 /**
  * @return an array of string of valid backend type names.
  */
 module.exports.list = function list() {
-  return Object.keys(backend_types);
+  return Object.keys(backend_factories);
 };
 
 /**
@@ -45,16 +45,16 @@ module.exports.list = function list() {
  * @param callback function(err, backend) called with err set in case of error backend set with the backend instance otherwhise
  */
 module.exports.create = function create(type, opts, callback) {
-  if (backend_types.hasOwnProperty(type)) {
-    var be = backend_types[type];
-    be.init(opts, function (err) {
-      if (err) {
-        callback(err, null);
-      } else {
-        callback(null, be);
-      }
+  if (typeof callback !== 'function') throw new Error('invalid callback');
+  type = type || this.list()[0];
+  if (backend_factories.hasOwnProperty(type)) {
+    var backend_factory = backend_factories[type];
+    var be = backend_factory.create(opts);
+    be.bind(function (err) {
+      if (err) return callback(err);
+      return callback(null, be);
     });
   } else {
-    callback("invalid backend type: '" + type + "', valid values are '" + Object.keys(backend_types).join("', '"));
+    return callback(new Error("invalid backend type: '" + type + "', valid values are '" + Object.keys(backend_factories).join("', '")));
   }
 };

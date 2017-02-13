@@ -18,37 +18,16 @@
  # under the License.
  ##############################################################
  */
-var should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
-var lugg = require('lugg');
-var log = lugg('health');
 
-process.env.A127_ENV = 'test';
+'use strict';
 
-describe('controllers', function() {
+var CassandraProcess = require('../helpers/cassandra');
+var db = CassandraProcess('./apache-cassandra-2.2.8/bin/cassandra');
+var CassandraBackend = require('../../app/api/helpers/cassandra_backend');
+var tester = require('../helpers/servicebox-with-db');
+var beopts = {'betype':'cassandra'};
 
-  describe('health', function() {
-
-    describe('GET /api/v2/health', function() {
-
-      it('should always return "up"', function(done) {
-
-        request(app)
-          .get('/api/v2/health')
-          .set('Accept', 'application/json')
-          .expect('Content-Type', /json/)
-          .expect(200)
-          .end(function(err, res) {
-            should.not.exist(err);
-            res.body.should.eql({message: 'up'});
-            done();
-          });
-      });
-
-    });
-
-  });
-
-});
+describe('Servicebox + Cassandra smoke tests', function() {
+    tester.serviceBoxWithDbSmokeTest(db, CassandraBackend, beopts);
+  }
+);

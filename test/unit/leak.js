@@ -18,66 +18,72 @@
  # under the License.
  ##############################################################
  */
-var os = require('os'),
-    should = require('should'),
-    expect = require('chai').expect,
-    request = require('supertest'),
-    app = require('../../../server');
+ var should = require('should');
+ var expect = require('chai').expect;
+ var request = require('supertest');
+ var lugg = require('lugg');
+ lugg.init({level:'warn'});
+ var app = require('../../app/server').test().app;
 
 process.env.A127_ENV = 'test';
 
 describe('controllers', function() {
 
-  describe('env', function() {
+  describe('leak', function() {
 
-    describe('GET /api/v2/env/vars', function() {
+    describe('GET /api/v2/heap/leak/1024', function() {
 
-      it('should return current OS environment variables', function(done) {
+      it('should leak 1024 bytes of heap for a total of 1024 when called 1st time', function(done) {
 
         request(app)
-          .get('/api/v2/env/vars')
+          .get('/api/v2/heap/leak/1024')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            expect(res.body).to.deep.equal(process.env);
+            res.body.should.eql({retainedHeap: 1024});
             done();
           });
       });
 
-    });
-
-    describe('GET /api/v2/env/vars/{name}', function() {
-
-      it('should return {name} current OS environment variable', function(done) {
+      it('should leak 1024 bytes of heap for a total of 2048 when called 2nd time', function(done) {
 
         request(app)
-          .get('/api/v2/env/vars/PATH')
+          .get('/api/v2/heap/leak/1024')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({PATH: process.env['PATH']});
+            res.body.should.eql({retainedHeap: 2048});
             done();
           });
       });
 
-    });
-
-    describe('GET /api/v2/env/hostname', function() {
-
-      it('should return {hostname} of current OS environment', function(done) {
+      it('should return 422 on invalid leak size', function(done) {
 
         request(app)
-          .get('/api/v2/env/hostname')
+          .get('/api/v2/heap/leak/-1')
+          .set('Accept', 'application/json')
+          .expect('Content-Type', /json/)
+          .expect(422, done);
+      });
+
+    });
+
+    describe('GET /api/v2/heap/free', function() {
+
+      it('should release all retained (leaked) heap', function(done) {
+
+        request(app)
+          .get('/api/v2/heap/free')
           .set('Accept', 'application/json')
           .expect('Content-Type', /json/)
           .expect(200)
           .end(function(err, res) {
             should.not.exist(err);
-            res.body.should.eql({hostname: os.hostname()});
+            res.body.should.eql({retainedHeap: 0});
             done();
           });
       });
