@@ -16,3 +16,4 @@ node_modules
 apache-cassandra-*
 redis-*
 dynamodb-latest
+package-lock.json
