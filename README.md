@@ -74,6 +74,14 @@ Sample request:
 curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/health/0.5
 ```
 
+## GET /api/v2/kill
+Cause the process to exit, simulating a crash.
+
+Sample request:
+```shell
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/kill
+```
+
 ## GET /api/v2/leak/{size}
 Leak {size} bytes of memory.
 
