@@ -1,5 +1,3 @@
-[![License Apache](https://www.brimarx.com/pub/apache2.svg)](http://www.apache.org/licenses/LICENSE-2.0)
-[![Circle CI](https://circleci.com/gh/legdba/servicebox-nodejs.svg?style=shield)](https://circleci.com/gh/legdba/servicebox-nodejs)
 [![Docker Image](https://quay.io/repository/legdba/servicebox-nodejs/status "Docker Repository on Quay.io")](https://quay.io/repository/legdba/servicebox-nodejs)
 [![Code Climate](https://codeclimate.com/github/legdba/servicebox-nodejs/badges/gpa.svg)](https://codeclimate.com/github/legdba/servicebox-nodejs)
 # Overview
@@ -73,6 +71,14 @@ Return a 'up' message {percentage}% time and an HTTP error 503 otherwise. The {p
 Sample request:
 ```shell
 curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/health/0.5
+```
+
+## GET /api/v2/kill
+Cause the process to exit, simulating a crash.
+
+Sample request:
+```shell
+curl -i -H 'Accept: application/json' http://localhost:8080/api/v2/kill
 ```
 
 ## GET /api/v2/leak/{size}

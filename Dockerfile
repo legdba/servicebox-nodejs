@@ -25,16 +25,18 @@ WORKDIR /opt/node-app
 # Install all dependencies and test
 COPY package.json /opt/node-app/
 COPY app/ /opt/node-app/app/
+COPY test/ /opt/node-app/test/
 COPY LICENSE NOTICE /opt/node-app/app/
 RUN npm install && \
     npm test && \
+    # Now that tests passed, reinstall the minimum dependencies to keep image as small as possible
     rm -rf node_modules && \
-    # Now that tests pass, reinstall the minimum dependencies to keep image as small as possible
     export NODE_ENV=production && \
     npm install && \
     npm dedupe && \
-    # Remove a 78MB beast that is for testing only!
+    # Remove swagger 78MB beast that is installed but usefull for testing only!
     rm -rf node_modules/swagger-express-mw/node_modules/swagger-node-runner/node_modules/sway/node_modules/json-schema-faker && \
+    # Check the app starts
     node app/server.js --help
 
 # Prepare for service
