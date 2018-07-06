@@ -309,6 +309,23 @@ paths:
           description: Error
           schema:
             $ref: "#/definitions/ErrorResponse"
+  /kill:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: kill
+    get:
+      description: Forces the process to exit, simulating a crash.
+      # used as the method name of the controller
+      operationId: kill
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: "#/definitions/Message"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
 # complex objects have schema definitions
 definitions:
   ListOfString:
