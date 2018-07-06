@@ -17,6 +17,6 @@ dependencies:
     #- redis-3.2.7
     - dynamodb-latest
   pre:
-    - if [[ ! -e apache-cassandra-2.2.8 ]]; then curl http://apache.mirror.globo.tech/cassandra/2.2.8/apache-cassandra-2.2.8-bin.tar.gz | tar -xvz; fi
+    - if [[ ! -e apache-cassandra-2.2.8 ]]; then curl https://archive.apache.org/dist/cassandra/2.2.8/apache-cassandra-2.2.8-bin.tar.gz | tar -xvz; fi
     #- if [[ ! -e redis-3.2.7/src/redis-server ]]; then curl http://download.redis.io/releases/redis-3.2.7.tar.gz | tar -xvz && cd redis-3.2.7 && make && make test; fi
     - if [[ ! -e dynamodb-latest/DynamoDBLocal.jar ]]; then mkdir -p dynamodb-latest && cd dynamodb-latest && curl http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz | tar -xvz; fi
