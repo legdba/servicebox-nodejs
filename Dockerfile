@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 ##############################################################
-FROM node:7.5.0-alpine
+FROM node:8.10.0-alpine
 
 # Prepare for dir
 RUN mkdir -p /opt/node-app
