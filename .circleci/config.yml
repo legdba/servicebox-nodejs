@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       - image: circleci/node:8.10.0
-      - image: circleci:dynamodb:10.0.2-13-jre-sid
+      - image: circleci/dynamodb:10.0.2-13-jre-sid
     steps:
       - checkout
       - run: npm install
