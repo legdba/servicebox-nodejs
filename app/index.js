@@ -64,7 +64,7 @@ var getConfig = function getConfig() {
     describe: 'log level; can also be set with env variable SB_LOGLEVEL',
     type: 'string',
     choices: ['debug', 'info', 'warn', 'error'],
-    default: 'warn'
+    default: 'info'
   })
   .option('betype', {
     alias: ['b'],
