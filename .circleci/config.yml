@@ -2,8 +2,10 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:8.11-stretch # 8.11 is 8.10 + a few security patches
+      - image: circleci/node:8.10.0
+      - image: circleci:dynamodb:10.0.2-13-jre-sid
     steps:
       - checkout
       - run: npm install
       - run: npm test
+      - run: npm run test-integration
