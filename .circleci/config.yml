@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/nodejs:8.11-stretch # 8.11 is 8.10 + a few security patches
+      - image: circleci/node:8.11-stretch # 8.11 is 8.10 + a few security patches
     steps:
       - checkout
       - run: npm install
